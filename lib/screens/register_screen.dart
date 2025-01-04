@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 
-class RegisterScreen extends StatelessWidget {
+class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({Key? key}) : super(key: key);
+
+  @override
+  _RegisterScreenState createState() => _RegisterScreenState();
+}
+
+class _RegisterScreenState extends State<RegisterScreen> {
   final AuthService _authService = AuthService();
 
   final TextEditingController idController = TextEditingController();
@@ -17,13 +24,13 @@ class RegisterScreen extends StatelessWidget {
     'estudiante',
     'administrador',
     'profesor',
-    'servicios_generales'
+    'servicios_generales',
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Register")),
+      appBar: AppBar(title: const Text("Register")),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
@@ -31,20 +38,20 @@ class RegisterScreen extends StatelessWidget {
             children: [
               TextField(
                 controller: idController,
-                decoration: InputDecoration(labelText: "ID (Cédula)"),
+                decoration: const InputDecoration(labelText: "ID (Cédula)"),
                 keyboardType: TextInputType.number,
               ),
               TextField(
                 controller: firstNameController,
-                decoration: InputDecoration(labelText: "First Name"),
+                decoration: const InputDecoration(labelText: "First Name"),
               ),
               TextField(
                 controller: lastNameController,
-                decoration: InputDecoration(labelText: "Last Name"),
+                decoration: const InputDecoration(labelText: "Last Name"),
               ),
               TextField(
                 controller: phoneController,
-                decoration: InputDecoration(labelText: "Phone"),
+                decoration: const InputDecoration(labelText: "Phone"),
                 keyboardType: TextInputType.phone,
               ),
               DropdownButtonFormField<String>(
@@ -56,21 +63,23 @@ class RegisterScreen extends StatelessWidget {
                   );
                 }).toList(),
                 onChanged: (value) {
-                  selectedUserType = value;
+                  setState(() {
+                    selectedUserType = value;
+                  });
                 },
-                decoration: InputDecoration(labelText: "User Type"),
+                decoration: const InputDecoration(labelText: "User Type"),
               ),
               TextField(
                 controller: emailController,
-                decoration: InputDecoration(labelText: "Institutional Email"),
+                decoration: const InputDecoration(labelText: "Institutional Email"),
                 keyboardType: TextInputType.emailAddress,
               ),
               TextField(
                 controller: passwordController,
-                decoration: InputDecoration(labelText: "Password"),
+                decoration: const InputDecoration(labelText: "Password"),
                 obscureText: true,
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () async {
                   final user = {
@@ -87,16 +96,16 @@ class RegisterScreen extends StatelessWidget {
 
                   if (success) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("User registered successfully!")),
+                      const SnackBar(content: Text("User registered successfully!")),
                     );
                     Navigator.pop(context);
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("User registration failed!")),
+                      const SnackBar(content: Text("User registration failed!")),
                     );
                   }
                 },
-                child: Text("Register"),
+                child: const Text("Register"),
               ),
             ],
           ),
