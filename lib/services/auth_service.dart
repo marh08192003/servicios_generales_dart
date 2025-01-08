@@ -19,16 +19,25 @@ class AuthService {
         // Decodificar respuesta en UTF-8
         final data = jsonDecode(utf8.decode(response.bodyBytes));
 
-        // Guardar token y datos relevantes del usuario
-        if (data['jwt'] == null) {
+        // Verificar que los datos existan y asignar valores predeterminados si no
+        final jwt = data['jwt'] ?? '';
+        final id = data['id']?.toString() ?? '';
+        final firstName = data['firstName'] ?? 'User';
+        final email = data['email'] ?? '';
+        final userType = data['userType'] ?? 'user'; // Cambiar 'userType' a 'userType'
+
+        // Validar que 'jwt' no sea nulo o vacío
+        if (jwt.isEmpty) {
           print("Error: 'jwt' is missing from the response.");
           return false;
         }
 
-        await _secureStorage.write('jwt', data['jwt']);
-        await _secureStorage.write('id', data['id'].toString());
-        await _secureStorage.write('firstName', data['firstName']);
-        await _secureStorage.write('email', data['email']);
+        // Guardar datos relevantes en almacenamiento seguro
+        await _secureStorage.write('jwt', jwt);
+        await _secureStorage.write('id', id);
+        await _secureStorage.write('firstName', firstName);
+        await _secureStorage.write('email', email);
+        await _secureStorage.write('userType', userType);
 
         return true;
       } else {
@@ -77,11 +86,19 @@ class AuthService {
     final id = await _secureStorage.read('id') ?? '';
     final firstName = await _secureStorage.read('firstName') ?? '';
     final email = await _secureStorage.read('email') ?? '';
+    final userType = await _secureStorage.read('userType') ?? '';
 
     return {
       'id': id,
       'firstName': firstName,
       'email': email,
+      'userType': userType,
     };
+  }
+
+  // Verificar si el usuario está autenticado
+  Future<bool> isAuthenticated() async {
+    final token = await getToken();
+    return token != null && token.isNotEmpty;
   }
 }
