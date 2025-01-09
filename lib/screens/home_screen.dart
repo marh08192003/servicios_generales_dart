@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'edit_user_screen.dart';
+import 'register_screen.dart'; // Importar la pantalla de registro
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -28,10 +29,10 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Home"),
+        title: const Text("Home"),
         actions: [
           IconButton(
-            icon: Icon(Icons.logout),
+            icon: const Icon(Icons.logout),
             onPressed: () async {
               await _authService.logout();
               Navigator.pushReplacementNamed(context, '/login');
@@ -43,15 +44,13 @@ class _HomeScreenState extends State<HomeScreen> {
         future: _userInfo,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             return Center(child: Text("Error loading user info"));
           } else {
             final userInfo = snapshot.data!;
-            final userId =
-                int.parse(userInfo['id']!); // Convierte el ID a entero
-            final userType =
-                userInfo['userType'] ?? 'user'; // Valor por defecto
+            final userId = int.parse(userInfo['id']!);
+            final userType = userInfo['userType'] ?? 'user';
 
             return Padding(
               padding: const EdgeInsets.all(16.0),
@@ -60,36 +59,51 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Text(
                     "Welcome, ${userInfo['firstName']}!",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                        fontSize: 20, fontWeight: FontWeight.bold),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   Text("Email: ${userInfo['email']}"),
                   Text("Role: $userType"),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () async {
-                      // Navegar a la vista de edición con el userId actual
                       final result = await Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => EditUserScreen(userId: userId),
                         ),
                       );
-
                       if (result == true) {
-                        _reloadUserInfo(); // Recargar información si hubo cambios
+                        _reloadUserInfo();
                       }
                     },
-                    child: Text("Edit Profile"),
+                    child: const Text("Edit Profile"),
                   ),
-                  if (userType.toLowerCase() ==
-                      "administrador") // Valida "admin"
+                  if (userType.toLowerCase() == "administrador") ...[
                     ElevatedButton(
                       onPressed: () {
                         Navigator.pushNamed(context, '/list-users');
                       },
-                      child: Text("Manage Users"),
+                      child: const Text("Manage Users"),
                     ),
+                    ElevatedButton(
+                      onPressed: () async {
+                        final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => RegisterScreen()),
+                        );
+                        if (result == true) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text("User registered successfully!")),
+                          );
+                        }
+                      },
+                      child: const Text("Create User"),
+                    ),
+                  ],
                 ],
               ),
             );
