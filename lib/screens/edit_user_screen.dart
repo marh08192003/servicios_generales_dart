@@ -22,7 +22,6 @@ class _EditUserScreenState extends State<EditUserScreen> {
   final TextEditingController userTypeController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
-  bool isActive = true;
   bool isLoading = false;
 
   @override
@@ -48,7 +47,6 @@ class _EditUserScreenState extends State<EditUserScreen> {
         emailController.text = response['institutionalEmail'];
         phoneController.text = response['phone'] ?? '';
         userTypeController.text = response['userType'];
-        isActive = response['active'] ?? true;
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -61,35 +59,38 @@ class _EditUserScreenState extends State<EditUserScreen> {
     }
   }
 
-  Future<void> _updateUser() async {
-    final updatedUser = {
-      'id': int.parse(idController.text),
-      'firstName': firstNameController.text,
-      'lastName': lastNameController.text,
-      'institutionalEmail': emailController.text,
-      'phone': phoneController.text,
-      'userType': userTypeController.text,
-      'password':
-          passwordController.text.isEmpty ? null : passwordController.text,
-      'active': isActive,
-    };
+ Future<void> _updateUser() async {
+  final updatedUser = {
+    'id': widget.userId,
+    'firstName': firstNameController.text,
+    'lastName': lastNameController.text,
+    'institutionalEmail': emailController.text,
+    'phone': phoneController.text,
+    'userType': userTypeController.text,
+    'password': passwordController.text.isEmpty ? null : passwordController.text,
+    'active': true, // Siempre establecer true
+  };
 
-    try {
-      await _apiService.put(
-        editUserEndpoint.replaceAll("{id}", widget.userId.toString()),
-        updatedUser,
-      );
+  try {
+    await _apiService.put(
+      editUserEndpoint.replaceAll("{id}", widget.userId.toString()),
+      updatedUser,
+    );
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("User updated successfully")),
-      );
-      Navigator.pop(context, true);
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error updating user: $e")),
-      );
-    }
+    // Actualizar información del usuario en SecureStorage
+    await _apiService.authService.saveUserInfo(updatedUser); 
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("User updated successfully")),
+    );
+    Navigator.pop(context, true); // Indica que hubo cambios
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Error updating user: $e")),
+    );
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -105,8 +106,8 @@ class _EditUserScreenState extends State<EditUserScreen> {
                 children: [
                   TextField(
                     controller: idController,
-                    decoration: InputDecoration(labelText: "ID"),
-                    readOnly: true, // El ID no debe ser editable
+                    decoration: InputDecoration(labelText: "User ID"),
+                    readOnly: true, // Campo solo de lectura
                   ),
                   TextField(
                     controller: firstNameController,
@@ -134,15 +135,6 @@ class _EditUserScreenState extends State<EditUserScreen> {
                       labelText: "Password (leave empty to keep current)",
                     ),
                     obscureText: true,
-                  ),
-                  SwitchListTile(
-                    title: Text("Active"),
-                    value: isActive,
-                    onChanged: (value) {
-                      setState(() {
-                        isActive = value;
-                      });
-                    },
                   ),
                   SizedBox(height: 20),
                   ElevatedButton(
@@ -173,7 +165,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
                     child: Text("Save Changes"),
                   ),
                 ],
-              )
+              ),
             ),
     );
   }

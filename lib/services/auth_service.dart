@@ -101,4 +101,11 @@ class AuthService {
     final token = await getToken();
     return token != null && token.isNotEmpty;
   }
+
+  Future<void> saveUserInfo(Map<String, dynamic> userInfo) async {
+    await _secureStorage.write('id', userInfo['id'].toString());
+    await _secureStorage.write('firstName', userInfo['firstName']);
+    await _secureStorage.write('email', userInfo['institutionalEmail']);
+    await _secureStorage.write('userType', userInfo['userType']);
+  }
 }

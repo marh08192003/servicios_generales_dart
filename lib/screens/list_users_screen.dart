@@ -16,17 +16,29 @@ class _ListUsersScreenState extends State<ListUsersScreen> {
   @override
   void initState() {
     super.initState();
-    _users = _fetchUsers();
+    _fetchUsers();
   }
 
-  Future<List<dynamic>> _fetchUsers() async {
+  void _fetchUsers() {
+    setState(() {
+      _users = _apiService
+          .get(listUsersEndpoint)
+          .then((data) => data as List<dynamic>);
+    });
+  }
+
+  Future<void> _deleteUser(int userId) async {
     try {
-      final response = await _apiService.get(listUsersEndpoint);
-      return response
-          as List<dynamic>; // Asegúrate de que la respuesta sea una lista
+      await _apiService
+          .delete(deleteUserEndpoint.replaceAll("{id}", userId.toString()));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("User deleted successfully")),
+      );
+      _fetchUsers(); // Refrescar lista tras eliminar el usuario
     } catch (e) {
-      print("Error fetching users: $e");
-      throw Exception("Failed to load users");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error deleting user: $e")),
+      );
     }
   }
 
@@ -35,6 +47,8 @@ class _ListUsersScreenState extends State<ListUsersScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text("Users"),
+        leading:
+            BackButton(), // Asegurar que el botón de regreso siempre esté presente
       ),
       body: FutureBuilder<List<dynamic>>(
         future: _users,
@@ -72,24 +86,55 @@ class _ListUsersScreenState extends State<ListUsersScreen> {
                         Text("Role: ${user['userType']}"),
                       ],
                     ),
-                    trailing: IconButton(
-                      icon: Icon(Icons.edit),
-                      onPressed: () async {
-                        final result = await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                EditUserScreen(userId: user['id']),
-                          ),
-                        );
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: Icon(Icons.edit),
+                          onPressed: () async {
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    EditUserScreen(userId: user['id']),
+                              ),
+                            );
 
-                        if (result == true) {
-                          // Refrescar lista después de editar
-                          setState(() {
-                            _users = _fetchUsers();
-                          });
-                        }
-                      },
+                            if (result == true) {
+                              _fetchUsers();
+                            }
+                          },
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.delete, color: Colors.red),
+                          onPressed: () async {
+                            final confirmed = await showDialog<bool>(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: Text("Confirm Deletion"),
+                                content: Text(
+                                    "Are you sure you want to delete this user?"),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(context, false),
+                                    child: Text("Cancel"),
+                                  ),
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(context, true),
+                                    child: Text("Delete"),
+                                  ),
+                                ],
+                              ),
+                            );
+
+                            if (confirmed == true) {
+                              await _deleteUser(user['id']);
+                            }
+                          },
+                        ),
+                      ],
                     ),
                   ),
                 );
