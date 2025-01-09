@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../config/api_constants.dart';
+import 'physical_area_detail_screen.dart';
 
 class ListPhysicalAreasScreen extends StatefulWidget {
   @override
@@ -10,7 +11,6 @@ class ListPhysicalAreasScreen extends StatefulWidget {
 
 class _ListPhysicalAreasScreenState extends State<ListPhysicalAreasScreen> {
   final ApiService _apiService = ApiService();
-
   late Future<List<dynamic>> _physicalAreas;
 
   @override
@@ -23,7 +23,7 @@ class _ListPhysicalAreasScreenState extends State<ListPhysicalAreasScreen> {
     setState(() {
       _physicalAreas = _apiService
           .get(listPhysicalAreasEndpoint)
-          .then((response) => response as List<dynamic>);
+          .then((data) => data as List<dynamic>);
     });
   }
 
@@ -50,11 +50,11 @@ class _ListPhysicalAreasScreenState extends State<ListPhysicalAreasScreen> {
               child: Text("No physical areas found"),
             );
           } else {
-            final physicalAreas = snapshot.data!;
+            final areas = snapshot.data!;
             return ListView.builder(
-              itemCount: physicalAreas.length,
+              itemCount: areas.length,
               itemBuilder: (context, index) {
-                final area = physicalAreas[index];
+                final area = areas[index];
                 return Card(
                   margin:
                       const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
@@ -63,7 +63,16 @@ class _ListPhysicalAreasScreenState extends State<ListPhysicalAreasScreen> {
                       area['name'],
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    subtitle: Text(area['description'] ?? "No description"),
+                    subtitle: Text("Location: ${area['location']}"),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => PhysicalAreaDetailScreen(
+                              physicalAreaId: area['id']),
+                        ),
+                      );
+                    },
                   ),
                 );
               },

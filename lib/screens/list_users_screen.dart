@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../config/api_constants.dart';
 import 'edit_user_screen.dart';
+import 'user_detail_screen.dart';
 
 class ListUsersScreen extends StatefulWidget {
   @override
@@ -32,7 +33,7 @@ class _ListUsersScreenState extends State<ListUsersScreen> {
       await _apiService
           .delete(deleteUserEndpoint.replaceAll("{id}", userId.toString()));
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("User deleted successfully")),
+        const SnackBar(content: Text("User deleted successfully")),
       );
       _fetchUsers(); // Refrescar lista tras eliminar el usuario
     } catch (e) {
@@ -46,24 +47,23 @@ class _ListUsersScreenState extends State<ListUsersScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Users"),
-        leading:
-            BackButton(), // Asegurar que el botón de regreso siempre esté presente
+        title: const Text("Users"),
+        leading: const BackButton(),
       ),
       body: FutureBuilder<List<dynamic>>(
         future: _users,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             return Center(
               child: Text(
                 "Error loading users: ${snapshot.error}",
-                style: TextStyle(color: Colors.red),
+                style: const TextStyle(color: Colors.red),
               ),
             );
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(
+            return const Center(
               child: Text("No users found"),
             );
           } else {
@@ -73,11 +73,12 @@ class _ListUsersScreenState extends State<ListUsersScreen> {
               itemBuilder: (context, index) {
                 final user = users[index];
                 return Card(
-                  margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                  margin:
+                      const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                   child: ListTile(
                     title: Text(
                       "${user['firstName']} ${user['lastName']}",
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -86,11 +87,20 @@ class _ListUsersScreenState extends State<ListUsersScreen> {
                         Text("Role: ${user['userType']}"),
                       ],
                     ),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              UserDetailScreen(userId: user['id']),
+                        ),
+                      );
+                    },
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          icon: Icon(Icons.edit),
+                          icon: const Icon(Icons.edit),
                           onPressed: () async {
                             final result = await Navigator.push(
                               context,
@@ -106,24 +116,24 @@ class _ListUsersScreenState extends State<ListUsersScreen> {
                           },
                         ),
                         IconButton(
-                          icon: Icon(Icons.delete, color: Colors.red),
+                          icon: const Icon(Icons.delete, color: Colors.red),
                           onPressed: () async {
                             final confirmed = await showDialog<bool>(
                               context: context,
                               builder: (context) => AlertDialog(
-                                title: Text("Confirm Deletion"),
-                                content: Text(
+                                title: const Text("Confirm Deletion"),
+                                content: const Text(
                                     "Are you sure you want to delete this user?"),
                                 actions: [
                                   TextButton(
                                     onPressed: () =>
                                         Navigator.pop(context, false),
-                                    child: Text("Cancel"),
+                                    child: const Text("Cancel"),
                                   ),
                                   TextButton(
                                     onPressed: () =>
                                         Navigator.pop(context, true),
-                                    child: Text("Delete"),
+                                    child: const Text("Delete"),
                                   ),
                                 ],
                               ),
