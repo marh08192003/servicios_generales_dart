@@ -16,12 +16,12 @@ const String deleteUserEndpoint = "$usersBaseEndpoint/delete/{id}"; // Reemplaza
 
 // Endpoints de incidencias
 const String incidentsBaseEndpoint = "/api/v1/incidents";
-const String listIncidentsEndpoint = "$incidentsBaseEndpoint/list";
-const String getIncidentByIdEndpoint = "$incidentsBaseEndpoint/list/{id}"; // Reemplazar dinámicamente {id}
-const String listIncidentsByPhysicalAreaEndpoint = "$incidentsBaseEndpoint/list/area/{physicalAreaId}"; // Reemplazar {physicalAreaId}
 const String createIncidentEndpoint = "$incidentsBaseEndpoint/create";
-const String editIncidentEndpoint = "$incidentsBaseEndpoint/edit/{id}"; // Reemplazar dinámicamente {id}
-const String deleteIncidentEndpoint = "$incidentsBaseEndpoint/delete/{id}"; // Reemplazar dinámicamente {id}
+const String listMyIncidentsEndpoint = "$incidentsBaseEndpoint/list/my-incidents"; // Incidencias del usuario autenticado
+const String getIncidentByIdEndpoint = "$incidentsBaseEndpoint/list/{id}"; // Incidencia específica por ID
+const String listAllIncidentsEndpoint = "$incidentsBaseEndpoint/list"; // Todas las incidencias (admin y servicios generales)
+const String editIncidentEndpoint = "$incidentsBaseEndpoint/edit/{id}"; // Editar incidencia
+const String deleteIncidentEndpoint = "$incidentsBaseEndpoint/delete/{id}"; // Eliminar incidencia
 
 // Endpoints de áreas físicas
 const String physicalAreasBaseEndpoint = "/api/v1/physical-areas";
@@ -45,7 +45,7 @@ const String listMaintenanceAssignmentsEndpoint = "$maintenanceAssignmentsBaseEn
 const String getMaintenanceAssignmentByIdEndpoint = "$maintenanceAssignmentsBaseEndpoint/list/{id}"; // Reemplazar dinámicamente {id}
 const String createMaintenanceAssignmentEndpoint = "$maintenanceAssignmentsBaseEndpoint/create";
 const String editMaintenanceAssignmentEndpoint = "$maintenanceAssignmentsBaseEndpoint/edit/{id}"; // Reemplazar dinámicamente {id}
-const String deleteMaintenanceAssignmentEndpoint = "$maintenanceAssignmentsBaseEndpoint/delete/{id}"; // Reemplazar dinámicamente {id}";
+const String deleteMaintenanceAssignmentEndpoint = "$maintenanceAssignmentsBaseEndpoint/delete/{id}"; // Reemplazar dinámicamente {id}
 
 // Headers comunes
 const String authorizationHeader = "Authorization";
