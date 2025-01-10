@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../config/api_constants.dart';
+import 'edit_physical_area_screen.dart';
 import 'physical_area_detail_screen.dart';
+import '../services/auth_service.dart';
 
 class ListPhysicalAreasScreen extends StatefulWidget {
   @override
@@ -11,12 +13,15 @@ class ListPhysicalAreasScreen extends StatefulWidget {
 
 class _ListPhysicalAreasScreenState extends State<ListPhysicalAreasScreen> {
   final ApiService _apiService = ApiService();
+  final AuthService _authService = AuthService();
   late Future<List<dynamic>> _physicalAreas;
+  String? _userType;
 
   @override
   void initState() {
     super.initState();
     _fetchPhysicalAreas();
+    _loadUserType();
   }
 
   void _fetchPhysicalAreas() {
@@ -25,6 +30,30 @@ class _ListPhysicalAreasScreenState extends State<ListPhysicalAreasScreen> {
           .get(listPhysicalAreasEndpoint)
           .then((data) => data as List<dynamic>);
     });
+  }
+
+  Future<void> _loadUserType() async {
+    final userInfo = await _authService.getUserInfo();
+    setState(() {
+      _userType = userInfo['userType']?.toLowerCase();
+    });
+  }
+
+  Future<void> _deletePhysicalArea(int physicalAreaId) async {
+    try {
+      await _apiService.delete(
+        deletePhysicalAreaEndpoint.replaceAll(
+            "{id}", physicalAreaId.toString()),
+      );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Physical area deleted successfully")),
+      );
+      _fetchPhysicalAreas(); // Refrescar lista tras eliminar el área física
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error deleting physical area: $e")),
+      );
+    }
   }
 
   @override
@@ -73,6 +102,60 @@ class _ListPhysicalAreasScreenState extends State<ListPhysicalAreasScreen> {
                         ),
                       );
                     },
+                    trailing: (_userType == 'administrador')
+                        ? Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit),
+                                onPressed: () async {
+                                  final result = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          EditPhysicalAreaScreen(
+                                              physicalAreaId: area['id']),
+                                    ),
+                                  );
+
+                                  if (result == true) {
+                                    _fetchPhysicalAreas(); // Refrescar lista tras editar
+                                  }
+                                },
+                              ),
+                              IconButton(
+                                icon:
+                                    const Icon(Icons.delete, color: Colors.red),
+                                onPressed: () async {
+                                  final confirmed = await showDialog<bool>(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      title: const Text("Confirm Deletion"),
+                                      content: const Text(
+                                          "Are you sure you want to delete this physical area?"),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.pop(context, false),
+                                          child: const Text("Cancel"),
+                                        ),
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.pop(context, true),
+                                          child: const Text("Delete"),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+
+                                  if (confirmed == true) {
+                                    await _deletePhysicalArea(area['id']);
+                                  }
+                                },
+                              ),
+                            ],
+                          )
+                        : null, // No mostrar acciones si no es administrador
                   ),
                 );
               },
