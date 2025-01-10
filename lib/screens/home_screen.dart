@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'create_incident_screen.dart';
 import 'edit_user_screen.dart';
+import 'list_my_incidents_screen.dart';
 import 'list_physical_areas_screen.dart';
 import 'register_screen.dart';
 import 'create_physical_area_screen.dart'; // Importar la pantalla para crear áreas físicas
@@ -152,6 +153,17 @@ class _HomeScreenState extends State<HomeScreen> {
                       }
                     },
                     child: const Text("Report Incident"),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ListMyIncidentsScreen(),
+                        ),
+                      );
+                    },
+                    child: const Text("View My Incidents"),
                   ),
                 ],
               ),
