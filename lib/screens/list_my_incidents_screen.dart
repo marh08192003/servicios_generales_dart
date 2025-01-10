@@ -21,7 +21,14 @@ class _ListMyIncidentsScreenState extends State<ListMyIncidentsScreen> {
     setState(() {
       _incidents = _apiService
           .get(listMyIncidentsEndpoint)
-          .then((data) => data as List<dynamic>);
+          .then((data) => data as List<dynamic>)
+          .catchError((error) {
+        // Si el error es 404, retornamos una lista vacía
+        if (error.toString().contains('404')) {
+          return [];
+        }
+        throw error; // Si no es un error 404, lanzamos el error
+      });
     });
   }
 
@@ -45,7 +52,7 @@ class _ListMyIncidentsScreenState extends State<ListMyIncidentsScreen> {
             );
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return const Center(
-              child: Text("No incidents found"),
+              child: Text("You have not reported any incidents."),
             );
           } else {
             final incidents = snapshot.data!;
@@ -54,8 +61,8 @@ class _ListMyIncidentsScreenState extends State<ListMyIncidentsScreen> {
               itemBuilder: (context, index) {
                 final incident = incidents[index];
                 return Card(
-                  margin: const EdgeInsets.symmetric(
-                      vertical: 8, horizontal: 16),
+                  margin:
+                      const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                   child: ListTile(
                     title: Text(
                       "Incident ID: ${incident['id']}",
