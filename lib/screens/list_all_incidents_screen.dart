@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../config/api_constants.dart';
+import 'incident_detail_screen.dart';
 
 class ListAllIncidentsScreen extends StatefulWidget {
   @override
@@ -78,6 +79,16 @@ class _ListAllIncidentsScreenState extends State<ListAllIncidentsScreen> {
                             "Reported on: ${incident['reportDate'] ?? 'Unknown'}"),
                       ],
                     ),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => IncidentDetailScreen(
+                            incidentId: incident['id'],
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 );
               },
