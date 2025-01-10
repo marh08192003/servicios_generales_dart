@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'create_incident_screen.dart';
 import 'edit_user_screen.dart';
+import 'list_all_incidents_screen.dart';
 import 'list_my_incidents_screen.dart';
 import 'list_physical_areas_screen.dart';
 import 'register_screen.dart';
@@ -165,6 +166,20 @@ class _HomeScreenState extends State<HomeScreen> {
                     },
                     child: const Text("View My Incidents"),
                   ),
+                  if (userType.toLowerCase() == "administrador" ||
+                      userType.toLowerCase() == "servicios_generales") ...[
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ListAllIncidentsScreen(),
+                          ),
+                        );
+                      },
+                      child: const Text("View All Incidents"),
+                    ),
+                  ],
                 ],
               ),
             );
