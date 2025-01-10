@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import 'create_incident_screen.dart';
 import 'edit_user_screen.dart';
 import 'list_physical_areas_screen.dart';
 import 'register_screen.dart';
@@ -135,6 +136,23 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: const Text("Create Physical Area"),
                     ),
                   ],
+                  ElevatedButton(
+                    onPressed: () async {
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => CreateIncidentScreen(),
+                        ),
+                      );
+                      if (result == true) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text("Incident created successfully!")),
+                        );
+                      }
+                    },
+                    child: const Text("Report Incident"),
+                  ),
                 ],
               ),
             );
