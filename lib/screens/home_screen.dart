@@ -30,6 +30,20 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  Future<void> _deleteAccount(int userId) async {
+    try {
+      await _authService.deleteUser(userId);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Account deleted successfully.")),
+      );
+      Navigator.pushReplacementNamed(context, '/login');
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error deleting account: $e")),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -180,6 +194,50 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: const Text("View All Incidents"),
                     ),
                   ],
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                    onPressed: () async {
+                      final confirmed = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text("Confirm Account Deletion"),
+                          content: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Text(
+                                  "To confirm account deletion, type \"eliminar cuenta\"."),
+                              TextField(
+                                onChanged: (value) {
+                                  setState(() {
+                                    // Add your state handling if necessary
+                                  });
+                                },
+                                decoration: const InputDecoration(
+                                    hintText: "Type \"eliminar cuenta\" here"),
+                              ),
+                            ],
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: const Text("Cancel"),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context, true);
+                              },
+                              child: const Text("Confirm"),
+                            ),
+                          ],
+                        ),
+                      );
+
+                      if (confirmed == true) {
+                        await _deleteAccount(userId);
+                      }
+                    },
+                    child: const Text("Delete Account"),
+                  ),
                 ],
               ),
             );

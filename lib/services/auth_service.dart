@@ -24,7 +24,8 @@ class AuthService {
         final id = data['id']?.toString() ?? '';
         final firstName = data['firstName'] ?? 'User';
         final email = data['email'] ?? '';
-        final userType = data['userType'] ?? 'user'; // Cambiar 'userType' a 'userType'
+        final userType =
+            data['userType'] ?? 'user'; // Cambiar 'userType' a 'userType'
 
         // Validar que 'jwt' no sea nulo o vacío
         if (jwt.isEmpty) {
@@ -107,5 +108,36 @@ class AuthService {
     await _secureStorage.write('firstName', userInfo['firstName']);
     await _secureStorage.write('email', userInfo['institutionalEmail']);
     await _secureStorage.write('userType', userInfo['userType']);
+  }
+
+  // Eliminar usuario
+  Future<bool> deleteUser(int userId) async {
+    try {
+      final token = await getToken();
+      if (token == null) {
+        print("Error: No JWT token found.");
+        return false;
+      }
+
+      final response = await http.delete(
+        Uri.parse('$baseUrl$deleteUserEndpoint'
+            .replaceAll("{id}", userId.toString())),
+        headers: {
+          'Content-Type': contentTypeJson,
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 204) {
+        print("User deleted successfully.");
+        return true;
+      } else {
+        print("Delete user error: ${utf8.decode(response.bodyBytes)}");
+        return false;
+      }
+    } catch (e) {
+      print("Delete user exception: $e");
+      return false;
+    }
   }
 }
