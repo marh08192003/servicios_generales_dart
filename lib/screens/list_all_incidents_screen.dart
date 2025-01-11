@@ -33,6 +33,22 @@ class _ListAllIncidentsScreenState extends State<ListAllIncidentsScreen> {
     });
   }
 
+  Future<void> _deleteIncident(int incidentId) async {
+    try {
+      await _apiService.delete(
+        deleteIncidentEndpoint.replaceAll("{id}", incidentId.toString()),
+      );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Incident deleted successfully!")),
+      );
+      _fetchIncidents();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error deleting incident: $e")),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -90,18 +106,52 @@ class _ListAllIncidentsScreenState extends State<ListAllIncidentsScreen> {
                         ),
                       );
                     },
-                    trailing: IconButton(
-                      icon: const Icon(Icons.edit),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => EditIncidentScreen(
-                              incidentId: incident['id'],
-                            ),
-                          ),
-                        );
-                      },
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.edit),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => EditIncidentScreen(
+                                  incidentId: incident['id'],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          onPressed: () async {
+                            final confirmed = await showDialog<bool>(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text("Confirm Deletion"),
+                                content: const Text(
+                                    "Are you sure you want to delete this incident?"),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(context, false),
+                                    child: const Text("Cancel"),
+                                  ),
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(context, true),
+                                    child: const Text("Delete"),
+                                  ),
+                                ],
+                              ),
+                            );
+
+                            if (confirmed == true) {
+                              await _deleteIncident(incident['id']);
+                            }
+                          },
+                        ),
+                      ],
                     ),
                   ),
                 );
