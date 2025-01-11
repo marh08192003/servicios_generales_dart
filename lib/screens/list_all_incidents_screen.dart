@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../config/api_constants.dart';
+import 'edit_incident_screen.dart';
 import 'incident_detail_screen.dart';
 
 class ListAllIncidentsScreen extends StatefulWidget {
@@ -89,6 +90,19 @@ class _ListAllIncidentsScreenState extends State<ListAllIncidentsScreen> {
                         ),
                       );
                     },
+                    trailing: IconButton(
+                      icon: const Icon(Icons.edit),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => EditIncidentScreen(
+                              incidentId: incident['id'],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 );
               },

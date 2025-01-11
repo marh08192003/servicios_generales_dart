@@ -26,10 +26,18 @@ class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
     setState(() {
       _incidentDetails = _apiService
           .get(
-            getIncidentByIdEndpoint.replaceAll(
-                "{id}", widget.incidentId.toString()),
-          )
-          .then((data) => data as Map<String, dynamic>);
+        getIncidentByIdEndpoint.replaceAll(
+            "{id}", widget.incidentId.toString()),
+      )
+          .then((data) async {
+        final incident = data as Map<String, dynamic>;
+        final physicalAreaResponse = await _apiService.get(
+          getPhysicalAreaByIdEndpoint.replaceAll(
+              "{id}", incident['physicalAreaId'].toString()),
+        );
+        incident['physicalAreaName'] = physicalAreaResponse['name'];
+        return incident;
+      });
     });
   }
 
@@ -69,7 +77,7 @@ class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
                   ),
                   const SizedBox(height: 10),
                   Text("Reported by User ID: ${incident['userId']}"),
-                  Text("Physical Area ID: ${incident['physicalAreaId']}"),
+                  Text("Physical Area: ${incident['physicalAreaName']}"),
                   Text("Description: ${incident['description']}"),
                   Text("Status: ${incident['status']}"),
                   Text("Reported on: ${incident['reportDate']}"),

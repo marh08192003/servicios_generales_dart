@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../config/api_constants.dart';
+import 'edit_incident_screen.dart';
 import 'incident_detail_screen.dart';
 
 class ListMyIncidentsScreen extends StatefulWidget {
@@ -24,11 +25,10 @@ class _ListMyIncidentsScreenState extends State<ListMyIncidentsScreen> {
           .get(listMyIncidentsEndpoint)
           .then((data) => data as List<dynamic>)
           .catchError((error) {
-        // Si el error es 404, retornamos una lista vacía
         if (error.toString().contains('404')) {
           return [];
         }
-        throw error; // Si no es un error 404, lanzamos el error
+        throw error;
       });
     });
   }
@@ -88,6 +88,19 @@ class _ListMyIncidentsScreenState extends State<ListMyIncidentsScreen> {
                         ),
                       );
                     },
+                    trailing: IconButton(
+                      icon: const Icon(Icons.edit),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => EditIncidentScreen(
+                              incidentId: incident['id'],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 );
               },
