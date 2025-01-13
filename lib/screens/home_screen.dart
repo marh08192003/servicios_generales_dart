@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'list_assigned_maintenances_screen.dart';
 import '../services/auth_service.dart';
 import 'create_incident_screen.dart';
 import 'edit_user_screen.dart';
@@ -6,7 +7,10 @@ import 'list_all_incidents_screen.dart';
 import 'list_my_incidents_screen.dart';
 import 'list_physical_areas_screen.dart';
 import 'register_screen.dart';
-import 'create_physical_area_screen.dart'; // Importar la pantalla para crear áreas físicas
+import 'create_physical_area_screen.dart';
+import 'list_maintenances_screen.dart';
+import 'create_maintenance_screen.dart';
+import 'assign_users_to_maintenance_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -69,7 +73,7 @@ class _HomeScreenState extends State<HomeScreen> {
           } else {
             final userInfo = snapshot.data!;
             final userId = int.parse(userInfo['id']!);
-            final userType = userInfo['userType'] ?? 'user';
+            final userType = userInfo['userType']?.toLowerCase() ?? 'user';
 
             return Padding(
               padding: const EdgeInsets.all(16.0),
@@ -110,7 +114,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     },
                     child: const Text("View Physical Areas"),
                   ),
-                  if (userType.toLowerCase() == "administrador") ...[
+                  if (userType == "administrador") ...[
                     ElevatedButton(
                       onPressed: () {
                         Navigator.pushNamed(context, '/list-users');
@@ -151,6 +155,61 @@ class _HomeScreenState extends State<HomeScreen> {
                       },
                       child: const Text("Create Physical Area"),
                     ),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ListMaintenancesScreen(),
+                          ),
+                        );
+                      },
+                      child: const Text("Manage Maintenances"),
+                    ),
+                    ElevatedButton(
+                      onPressed: () async {
+                        final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CreateMaintenanceScreen(),
+                          ),
+                        );
+                        if (result == true) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content:
+                                    Text("Maintenance created successfully!")),
+                          );
+                        }
+                      },
+                      child: const Text("Create Maintenance"),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                AssignUsersToMaintenanceScreen(),
+                          ),
+                        );
+                      },
+                      child: const Text("Assign Users to Maintenance"),
+                    ),
+                  ],
+                  if (userType == "servicios_generales") ...[
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                AssignedMaintenancesScreen(), // Nueva pantalla
+                          ),
+                        );
+                      },
+                      child: const Text("View Assigned Maintenances"),
+                    ),
                   ],
                   ElevatedButton(
                     onPressed: () async {
@@ -180,8 +239,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     },
                     child: const Text("View My Incidents"),
                   ),
-                  if (userType.toLowerCase() == "administrador" ||
-                      userType.toLowerCase() == "servicios_generales") ...[
+                  if (userType == "administrador" ||
+                      userType == "servicios_generales") ...[
                     ElevatedButton(
                       onPressed: () {
                         Navigator.push(
@@ -195,7 +254,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ],
                   ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                    style:
+                        ElevatedButton.styleFrom(backgroundColor: Colors.red),
                     onPressed: () async {
                       final confirmed = await showDialog<bool>(
                         context: context,

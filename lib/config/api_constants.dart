@@ -46,6 +46,7 @@ const String getMaintenanceAssignmentByIdEndpoint = "$maintenanceAssignmentsBase
 const String createMaintenanceAssignmentEndpoint = "$maintenanceAssignmentsBaseEndpoint/create";
 const String editMaintenanceAssignmentEndpoint = "$maintenanceAssignmentsBaseEndpoint/edit/{id}"; // Reemplazar dinámicamente {id}
 const String deleteMaintenanceAssignmentEndpoint = "$maintenanceAssignmentsBaseEndpoint/delete/{id}"; // Reemplazar dinámicamente {id}
+const String listAssignedMaintenancesEndpoint = "$maintenanceAssignmentsBaseEndpoint/list/assigned-to-me";
 
 // Headers comunes
 const String authorizationHeader = "Authorization";
