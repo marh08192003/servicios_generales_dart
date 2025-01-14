@@ -17,6 +17,8 @@ class _AssignUsersToMaintenanceScreenState
   int? _selectedMaintenanceId;
   List<int> _selectedUserIds = [];
 
+  bool _isLoading = false;
+
   @override
   void initState() {
     super.initState();
@@ -44,10 +46,14 @@ class _AssignUsersToMaintenanceScreenState
   Future<void> _assignUsers() async {
     if (_selectedMaintenanceId == null || _selectedUserIds.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Please select a maintenance and users.")),
+        const SnackBar(content: Text("Please select a maintenance and users.")),
       );
       return;
     }
+
+    setState(() {
+      _isLoading = true;
+    });
 
     try {
       for (var userId in _selectedUserIds) {
@@ -57,13 +63,27 @@ class _AssignUsersToMaintenanceScreenState
         });
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Users assigned successfully!")),
+        const SnackBar(content: Text("Users assigned successfully!")),
       );
       Navigator.pop(context);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error assigning users: $e")),
-      );
+      if (e.toString().contains("409")) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              "Error: One or more users have already been assigned to this maintenance.",
+            ),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error assigning users: $e")),
+        );
+      }
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -73,63 +93,66 @@ class _AssignUsersToMaintenanceScreenState
       appBar: AppBar(
         title: const Text("Assign Users to Maintenance"),
       ),
-      body: _maintenances.isEmpty || _users.isEmpty
+      body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text("Select Maintenance:"),
-                  DropdownButton<int>(
-                    value: _selectedMaintenanceId,
-                    isExpanded: true,
-                    items: _maintenances.map((maintenance) {
-                      return DropdownMenuItem<int>(
-                        value: maintenance['id'],
-                        child: Text(
-                          "${maintenance['maintenanceType']} - ${maintenance['description']}",
-                        ),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedMaintenanceId = value;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 20),
-                  const Text("Select Users:"),
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: _users.length,
-                      itemBuilder: (context, index) {
-                        final user = _users[index];
-                        return CheckboxListTile(
-                          title:
-                              Text("${user['firstName']} (ID: ${user['id']})"),
-                          value: _selectedUserIds.contains(user['id']),
-                          onChanged: (isSelected) {
-                            setState(() {
-                              if (isSelected == true) {
-                                _selectedUserIds.add(user['id']);
-                              } else {
-                                _selectedUserIds.remove(user['id']);
-                              }
-                            });
+          : _maintenances.isEmpty || _users.isEmpty
+              ? const Center(child: Text("No data available"))
+              : Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text("Select Maintenance:"),
+                      DropdownButton<int>(
+                        value: _selectedMaintenanceId,
+                        isExpanded: true,
+                        items: _maintenances.map((maintenance) {
+                          return DropdownMenuItem<int>(
+                            value: maintenance['id'],
+                            child: Text(
+                              "${maintenance['maintenanceType']} - ${maintenance['description']}",
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedMaintenanceId = value;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 20),
+                      const Text("Select Users:"),
+                      Expanded(
+                        child: ListView.builder(
+                          itemCount: _users.length,
+                          itemBuilder: (context, index) {
+                            final user = _users[index];
+                            return CheckboxListTile(
+                              title: Text(
+                                "${user['firstName']} (ID: ${user['id']})",
+                              ),
+                              value: _selectedUserIds.contains(user['id']),
+                              onChanged: (isSelected) {
+                                setState(() {
+                                  if (isSelected == true) {
+                                    _selectedUserIds.add(user['id']);
+                                  } else {
+                                    _selectedUserIds.remove(user['id']);
+                                  }
+                                });
+                              },
+                            );
                           },
-                        );
-                      },
-                    ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: _assignUsers,
+                        child: const Text("Assign Users"),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: _assignUsers,
-                    child: const Text("Assign Users"),
-                  ),
-                ],
-              ),
-            ),
+                ),
     );
   }
 }
