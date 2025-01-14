@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
-import '../services/api_service.dart';
-import '../config/api_constants.dart';
+import '../../services/api_service.dart';
+import '../../config/api_constants.dart';
 
-class CreateMaintenanceScreen extends StatefulWidget {
+class EditMaintenanceScreen extends StatefulWidget {
+  final int maintenanceId;
+
+  const EditMaintenanceScreen({Key? key, required this.maintenanceId})
+      : super(key: key);
+
   @override
-  _CreateMaintenanceScreenState createState() =>
-      _CreateMaintenanceScreenState();
+  _EditMaintenanceScreenState createState() => _EditMaintenanceScreenState();
 }
 
-class _CreateMaintenanceScreenState extends State<CreateMaintenanceScreen> {
+class _EditMaintenanceScreenState extends State<EditMaintenanceScreen> {
   final ApiService _apiService = ApiService();
   final _formKey = GlobalKey<FormState>();
 
@@ -17,9 +21,9 @@ class _CreateMaintenanceScreenState extends State<CreateMaintenanceScreen> {
   String? _selectedMaintenanceType;
   int? _selectedPhysicalAreaId;
   DateTime? _selectedStartDate;
+  String _priority = "media";
 
   List<dynamic> _physicalAreas = [];
-
   final List<String> _maintenanceTypes = [
     'Inspecciones',
     'Reparaciones',
@@ -27,10 +31,58 @@ class _CreateMaintenanceScreenState extends State<CreateMaintenanceScreen> {
     'Mantenimiento preventivo',
   ];
 
+  bool isLoading = false;
+
   @override
   void initState() {
     super.initState();
+    _loadMaintenanceDetails();
     _fetchPhysicalAreas();
+  }
+
+  Future<void> _loadMaintenanceDetails() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final response = await _apiService.get(
+        getMaintenanceByIdEndpoint.replaceAll(
+          "{id}",
+          widget.maintenanceId.toString(),
+        ),
+      );
+
+      setState(() {
+        // Validar si el tipo de mantenimiento devuelto por el backend coincide con los disponibles
+        final backendType = response['maintenanceType'];
+        _selectedMaintenanceType =
+            _maintenanceTypes.contains(backendType) ? backendType : null;
+
+        if (_selectedMaintenanceType == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                  "Maintenance type '${response['maintenanceType']}' is invalid."),
+            ),
+          );
+        }
+
+        _selectedPhysicalAreaId = response['physicalAreaId'];
+        _durationController.text = response['duration'].toString();
+        _descriptionController.text = response['description'];
+        _priority = response['priority'];
+        _selectedStartDate = DateTime.parse(response['startDate']);
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error loading maintenance details: $e")),
+      );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   Future<void> _fetchPhysicalAreas() async {
@@ -46,23 +98,33 @@ class _CreateMaintenanceScreenState extends State<CreateMaintenanceScreen> {
     }
   }
 
-  Future<void> _createMaintenance() async {
+  Future<void> _updateMaintenance() async {
     if (_formKey.currentState!.validate()) {
+      final updatedMaintenance = {
+        'maintenanceType': _selectedMaintenanceType,
+        'physicalAreaId': _selectedPhysicalAreaId,
+        'startDate': _selectedStartDate?.toIso8601String(),
+        'duration': int.tryParse(_durationController.text),
+        'description': _descriptionController.text,
+        'priority': _priority,
+      };
+
       try {
-        await _apiService.post(createMaintenanceEndpoint, {
-          'physicalAreaId': _selectedPhysicalAreaId,
-          'maintenanceType': _selectedMaintenanceType,
-          'startDate': _selectedStartDate?.toIso8601String(),
-          'duration': int.tryParse(_durationController.text),
-          'description': _descriptionController.text,
-        });
+        await _apiService.put(
+          editMaintenanceEndpoint.replaceAll(
+            "{id}",
+            widget.maintenanceId.toString(),
+          ),
+          updatedMaintenance,
+        );
+
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Maintenance created successfully!")),
+          const SnackBar(content: Text("Maintenance updated successfully")),
         );
         Navigator.pop(context, true);
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error creating maintenance: $e")),
+          SnackBar(content: Text("Error updating maintenance: $e")),
         );
       }
     }
@@ -101,9 +163,9 @@ class _CreateMaintenanceScreenState extends State<CreateMaintenanceScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Create Maintenance"),
+        title: const Text("Edit Maintenance"),
       ),
-      body: _physicalAreas.isEmpty
+      body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : Padding(
               padding: const EdgeInsets.all(16.0),
@@ -111,6 +173,14 @@ class _CreateMaintenanceScreenState extends State<CreateMaintenanceScreen> {
                 key: _formKey,
                 child: ListView(
                   children: [
+                    TextFormField(
+                      initialValue: widget.maintenanceId.toString(),
+                      decoration: const InputDecoration(
+                        labelText: "Maintenance ID",
+                      ),
+                      readOnly: true,
+                    ),
+                    const SizedBox(height: 16),
                     DropdownButtonFormField<String>(
                       value: _selectedMaintenanceType,
                       items: _maintenanceTypes.map((type) {
@@ -173,27 +243,15 @@ class _CreateMaintenanceScreenState extends State<CreateMaintenanceScreen> {
                       },
                     ),
                     const SizedBox(height: 16),
-                    DropdownButtonFormField<int>(
-                      value: int.tryParse(
-                          _durationController.text), // Valor seleccionado
-                      items:
-                          List.generate(24, (index) => index + 1).map((value) {
-                        return DropdownMenuItem<int>(
-                          value: value,
-                          child: Text(value.toString()), // Muestra cada número
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _durationController.text = value.toString();
-                        });
-                      },
+                    TextFormField(
+                      controller: _durationController,
                       decoration: const InputDecoration(
                         labelText: "Duration (hours)",
                       ),
+                      keyboardType: TextInputType.number,
                       validator: (value) {
-                        if (value == null) {
-                          return "Please select a duration.";
+                        if (value == null || value.isEmpty) {
+                          return "Please provide a duration.";
                         }
                         return null;
                       },
@@ -221,9 +279,48 @@ class _CreateMaintenanceScreenState extends State<CreateMaintenanceScreen> {
                       },
                     ),
                     const SizedBox(height: 16),
+                    DropdownButtonFormField<String>(
+                      value: _priority,
+                      items: ['baja', 'media', 'alta'].map((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value.toUpperCase()),
+                        );
+                      }).toList(),
+                      onChanged: (newValue) {
+                        setState(() {
+                          _priority = newValue!;
+                        });
+                      },
+                      decoration: const InputDecoration(labelText: "Priority"),
+                    ),
+                    const SizedBox(height: 20),
                     ElevatedButton(
-                      onPressed: _createMaintenance,
-                      child: const Text("Create Maintenance"),
+                      onPressed: () async {
+                        final confirmed = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text("Confirm Changes"),
+                            content: const Text(
+                                "Are you sure you want to save these changes?"),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text("Cancel"),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                child: const Text("Confirm"),
+                              ),
+                            ],
+                          ),
+                        );
+
+                        if (confirmed == true) {
+                          await _updateMaintenance();
+                        }
+                      },
+                      child: const Text("Save Changes"),
                     ),
                   ],
                 ),

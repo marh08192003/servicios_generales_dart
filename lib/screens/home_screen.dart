@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'list_assigned_maintenances_screen.dart';
+import 'maintenances/list_assigned_maintenances_screen.dart';
 import '../services/auth_service.dart';
-import 'create_incident_screen.dart';
-import 'edit_user_screen.dart';
-import 'list_all_incidents_screen.dart';
-import 'list_my_incidents_screen.dart';
-import 'list_physical_areas_screen.dart';
-import 'register_screen.dart';
-import 'create_physical_area_screen.dart';
-import 'list_maintenances_screen.dart';
-import 'create_maintenance_screen.dart';
-import 'assign_users_to_maintenance_screen.dart';
+import 'incidents/create_incident_screen.dart';
+import 'users/edit_user_screen.dart';
+import 'incidents/list_all_incidents_screen.dart';
+import 'incidents/list_my_incidents_screen.dart';
+import 'physical_areas/list_physical_areas_screen.dart';
+import 'login/register_screen.dart';
+import 'physical_areas/create_physical_area_screen.dart';
+import 'maintenances/list_maintenances_screen.dart';
+import 'maintenances/create_maintenance_screen.dart';
+import 'maintenances/assign_users_to_maintenance_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override

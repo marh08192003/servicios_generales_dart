@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../services/api_service.dart';
-import '../config/api_constants.dart';
+import '../../services/api_service.dart';
+import '../../config/api_constants.dart';
 
 class IncidentDetailScreen extends StatefulWidget {
   final int incidentId;

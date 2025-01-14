@@ -1,44 +1,50 @@
 import 'package:flutter/material.dart';
-import '../services/api_service.dart';
-import '../config/api_constants.dart';
-import 'edit_user_screen.dart';
-import 'user_detail_screen.dart';
+import '../../services/api_service.dart';
+import '../../config/api_constants.dart';
+import 'edit_incident_screen.dart';
+import 'incident_detail_screen.dart';
 
-class ListUsersScreen extends StatefulWidget {
+class ListMyIncidentsScreen extends StatefulWidget {
   @override
-  _ListUsersScreenState createState() => _ListUsersScreenState();
+  _ListMyIncidentsScreenState createState() => _ListMyIncidentsScreenState();
 }
 
-class _ListUsersScreenState extends State<ListUsersScreen> {
+class _ListMyIncidentsScreenState extends State<ListMyIncidentsScreen> {
   final ApiService _apiService = ApiService();
-
-  late Future<List<dynamic>> _users;
+  late Future<List<dynamic>> _incidents;
 
   @override
   void initState() {
     super.initState();
-    _fetchUsers();
+    _fetchIncidents();
   }
 
-  void _fetchUsers() {
+  void _fetchIncidents() {
     setState(() {
-      _users = _apiService
-          .get(listUsersEndpoint)
-          .then((data) => data as List<dynamic>);
+      _incidents = _apiService
+          .get(listMyIncidentsEndpoint)
+          .then((data) => data as List<dynamic>)
+          .catchError((error) {
+        if (error.toString().contains('404')) {
+          return [];
+        }
+        throw error;
+      });
     });
   }
 
-  Future<void> _deleteUser(int userId) async {
+  Future<void> _deleteIncident(int incidentId) async {
     try {
-      await _apiService
-          .delete(deleteUserEndpoint.replaceAll("{id}", userId.toString()));
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("User deleted successfully")),
+      await _apiService.delete(
+        deleteIncidentEndpoint.replaceAll("{id}", incidentId.toString()),
       );
-      _fetchUsers(); // Refrescar lista tras eliminar el usuario
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Incident deleted successfully!")),
+      );
+      _fetchIncidents();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error deleting user: $e")),
+        SnackBar(content: Text("Error deleting incident: $e")),
       );
     }
   }
@@ -47,52 +53,54 @@ class _ListUsersScreenState extends State<ListUsersScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Users"),
-        leading: const BackButton(),
+        title: const Text("My Incidents"),
       ),
       body: FutureBuilder<List<dynamic>>(
-        future: _users,
+        future: _incidents,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             return Center(
               child: Text(
-                "Error loading users: ${snapshot.error}",
+                "Error loading incidents: ${snapshot.error}",
                 style: const TextStyle(color: Colors.red),
               ),
             );
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return const Center(
-              child: Text("No users found"),
+              child: Text("You have not reported any incidents."),
             );
           } else {
-            final users = snapshot.data!;
+            final incidents = snapshot.data!;
             return ListView.builder(
-              itemCount: users.length,
+              itemCount: incidents.length,
               itemBuilder: (context, index) {
-                final user = users[index];
+                final incident = incidents[index];
                 return Card(
                   margin:
                       const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                   child: ListTile(
                     title: Text(
-                      "${user['firstName']} ${user['lastName']}",
+                      "Incident ID: ${incident['id']}",
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text("Email: ${user['institutionalEmail']}"),
-                        Text("Role: ${user['userType']}"),
+                        Text("Description: ${incident['description']}"),
+                        Text("Status: ${incident['status']}"),
+                        Text(
+                            "Reported on: ${incident['reportDate'] ?? 'Unknown'}"),
                       ],
                     ),
                     onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) =>
-                              UserDetailScreen(userId: user['id']),
+                          builder: (context) => IncidentDetailScreen(
+                            incidentId: incident['id'],
+                          ),
                         ),
                       );
                     },
@@ -101,18 +109,15 @@ class _ListUsersScreenState extends State<ListUsersScreen> {
                       children: [
                         IconButton(
                           icon: const Icon(Icons.edit),
-                          onPressed: () async {
-                            final result = await Navigator.push(
+                          onPressed: () {
+                            Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    EditUserScreen(userId: user['id']),
+                                builder: (context) => EditIncidentScreen(
+                                  incidentId: incident['id'],
+                                ),
                               ),
                             );
-
-                            if (result == true) {
-                              _fetchUsers();
-                            }
                           },
                         ),
                         IconButton(
@@ -123,7 +128,7 @@ class _ListUsersScreenState extends State<ListUsersScreen> {
                               builder: (context) => AlertDialog(
                                 title: const Text("Confirm Deletion"),
                                 content: const Text(
-                                    "Are you sure you want to delete this user?"),
+                                    "Are you sure you want to delete this incident?"),
                                 actions: [
                                   TextButton(
                                     onPressed: () =>
@@ -140,7 +145,7 @@ class _ListUsersScreenState extends State<ListUsersScreen> {
                             );
 
                             if (confirmed == true) {
-                              await _deleteUser(user['id']);
+                              await _deleteIncident(incident['id']);
                             }
                           },
                         ),

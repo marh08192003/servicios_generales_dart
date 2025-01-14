@@ -1,44 +1,44 @@
 import 'package:flutter/material.dart';
-import '../services/api_service.dart';
-import '../config/api_constants.dart';
-import 'edit_maintenance_screen.dart';
-import 'create_maintenance_screen.dart';
-import 'maintenance_detail_screen.dart';
+import '../../config/api_constants.dart';
+import '../../services/api_service.dart';
+import 'edit_user_screen.dart';
+import 'user_detail_screen.dart';
 
-class ListMaintenancesScreen extends StatefulWidget {
+class ListUsersScreen extends StatefulWidget {
   @override
-  _ListMaintenancesScreenState createState() => _ListMaintenancesScreenState();
+  _ListUsersScreenState createState() => _ListUsersScreenState();
 }
 
-class _ListMaintenancesScreenState extends State<ListMaintenancesScreen> {
+class _ListUsersScreenState extends State<ListUsersScreen> {
   final ApiService _apiService = ApiService();
-  late Future<List<dynamic>> _maintenances;
+
+  late Future<List<dynamic>> _users;
 
   @override
   void initState() {
     super.initState();
-    _fetchMaintenances();
+    _fetchUsers();
   }
 
-  void _fetchMaintenances() {
+  void _fetchUsers() {
     setState(() {
-      _maintenances = _apiService
-          .get(listMaintenancesEndpoint)
+      _users = _apiService
+          .get(listUsersEndpoint)
           .then((data) => data as List<dynamic>);
     });
   }
 
-  Future<void> _deleteMaintenance(int id) async {
+  Future<void> _deleteUser(int userId) async {
     try {
       await _apiService
-          .delete(deleteMaintenanceEndpoint.replaceAll("{id}", id.toString()));
+          .delete(deleteUserEndpoint.replaceAll("{id}", userId.toString()));
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Maintenance deleted successfully")),
+        const SnackBar(content: Text("User deleted successfully")),
       );
-      _fetchMaintenances(); // Refresca el listado tras eliminar
+      _fetchUsers(); // Refrescar lista tras eliminar el usuario
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error deleting maintenance: $e")),
+        SnackBar(content: Text("Error deleting user: $e")),
       );
     }
   }
@@ -47,71 +47,72 @@ class _ListMaintenancesScreenState extends State<ListMaintenancesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Maintenances"),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => CreateMaintenanceScreen()),
-              ).then((_) => _fetchMaintenances());
-            },
-          ),
-        ],
+        title: const Text("Users"),
+        leading: const BackButton(),
       ),
       body: FutureBuilder<List<dynamic>>(
-        future: _maintenances,
+        future: _users,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             return Center(
-              child: Text("Error loading maintenances: ${snapshot.error}"),
+              child: Text(
+                "Error loading users: ${snapshot.error}",
+                style: const TextStyle(color: Colors.red),
+              ),
             );
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return const Center(
-              child: Text("No maintenances found."),
+              child: Text("No users found"),
             );
           } else {
-            final maintenances = snapshot.data!;
+            final users = snapshot.data!;
             return ListView.builder(
-              itemCount: maintenances.length,
+              itemCount: users.length,
               itemBuilder: (context, index) {
-                final maintenance = maintenances[index];
+                final user = users[index];
                 return Card(
                   margin:
                       const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                   child: ListTile(
                     title: Text(
-                      "Maintenance ID: ${maintenance['id']}",
+                      "${user['firstName']} ${user['lastName']}",
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text("Type: ${maintenance['maintenanceType']}"),
-                        Text("Area: ${maintenance['physicalAreaId']}"),
-                        Text("Priority: ${maintenance['priority']}"),
-                        Text("Start: ${maintenance['startDate']}"),
-                        Text("Duration: ${maintenance['duration']} hours"),
+                        Text("Email: ${user['institutionalEmail']}"),
+                        Text("Role: ${user['userType']}"),
                       ],
                     ),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              UserDetailScreen(userId: user['id']),
+                        ),
+                      );
+                    },
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.edit, color: Colors.blue),
-                          onPressed: () {
-                            Navigator.push(
+                          icon: const Icon(Icons.edit),
+                          onPressed: () async {
+                            final result = await Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => EditMaintenanceScreen(
-                                  maintenanceId: maintenance['id'],
-                                ),
+                                builder: (context) =>
+                                    EditUserScreen(userId: user['id']),
                               ),
-                            ).then((_) => _fetchMaintenances());
+                            );
+
+                            if (result == true) {
+                              _fetchUsers();
+                            }
                           },
                         ),
                         IconButton(
@@ -122,7 +123,7 @@ class _ListMaintenancesScreenState extends State<ListMaintenancesScreen> {
                               builder: (context) => AlertDialog(
                                 title: const Text("Confirm Deletion"),
                                 content: const Text(
-                                    "Are you sure you want to delete this maintenance?"),
+                                    "Are you sure you want to delete this user?"),
                                 actions: [
                                   TextButton(
                                     onPressed: () =>
@@ -137,23 +138,14 @@ class _ListMaintenancesScreenState extends State<ListMaintenancesScreen> {
                                 ],
                               ),
                             );
+
                             if (confirmed == true) {
-                              await _deleteMaintenance(maintenance['id']);
+                              await _deleteUser(user['id']);
                             }
                           },
                         ),
                       ],
                     ),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => MaintenanceDetailScreen(
-                            maintenanceId: maintenance['id'],
-                          ),
-                        ),
-                      );
-                    },
                   ),
                 );
               },

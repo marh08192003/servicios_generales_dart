@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../services/api_service.dart';
-import '../config/api_constants.dart';
+import '../../services/api_service.dart';
+import '../../config/api_constants.dart';
 import 'edit_physical_area_screen.dart';
 import 'physical_area_detail_screen.dart';
-import '../services/auth_service.dart';
+import '../../services/auth_service.dart';
 
 class ListPhysicalAreasScreen extends StatefulWidget {
   @override

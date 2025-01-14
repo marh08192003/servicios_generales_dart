@@ -1,37 +1,34 @@
 import 'package:flutter/material.dart';
-import '../services/api_service.dart';
-import '../config/api_constants.dart';
+import '../../services/api_service.dart';
+import '../../config/api_constants.dart';
 
-class PhysicalAreaDetailScreen extends StatefulWidget {
-  final int physicalAreaId;
+class UserDetailScreen extends StatefulWidget {
+  final int userId;
 
-  const PhysicalAreaDetailScreen({Key? key, required this.physicalAreaId})
-      : super(key: key);
+  const UserDetailScreen({Key? key, required this.userId}) : super(key: key);
 
   @override
-  _PhysicalAreaDetailScreenState createState() =>
-      _PhysicalAreaDetailScreenState();
+  _UserDetailScreenState createState() => _UserDetailScreenState();
 }
 
-class _PhysicalAreaDetailScreenState extends State<PhysicalAreaDetailScreen> {
+class _UserDetailScreenState extends State<UserDetailScreen> {
   final ApiService _apiService = ApiService();
-  late Future<Map<String, dynamic>> _physicalAreaDetails;
+  late Future<Map<String, dynamic>> _userDetails;
 
   @override
   void initState() {
     super.initState();
-    _physicalAreaDetails = _fetchPhysicalAreaDetails();
+    _userDetails = _fetchUserDetails();
   }
 
-  Future<Map<String, dynamic>> _fetchPhysicalAreaDetails() async {
+  Future<Map<String, dynamic>> _fetchUserDetails() async {
     try {
       final response = await _apiService.get(
-        getPhysicalAreaByIdEndpoint.replaceAll(
-            "{id}", widget.physicalAreaId.toString()),
+        getUserByIdEndpoint.replaceAll("{id}", widget.userId.toString()),
       );
       return response as Map<String, dynamic>;
     } catch (e) {
-      throw Exception("Error fetching physical area details: $e");
+      throw Exception("Error fetching user details: $e");
     }
   }
 
@@ -39,43 +36,42 @@ class _PhysicalAreaDetailScreenState extends State<PhysicalAreaDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Physical Area Details"),
+        title: const Text("User Details"),
       ),
       body: FutureBuilder<Map<String, dynamic>>(
-        future: _physicalAreaDetails,
+        future: _userDetails,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             return Center(
               child: Text(
-                "Error loading physical area details: ${snapshot.error}",
+                "Error loading user details: ${snapshot.error}",
                 style: const TextStyle(color: Colors.red),
               ),
             );
           } else {
-            final area = snapshot.data!;
+            final user = snapshot.data!;
             return Padding(
               padding: const EdgeInsets.all(16.0),
               child: ListView(
                 children: [
                   Text(
-                    "Area ID: ${area['id']}",
+                    "User ID: ${user['id']}",
                     style: const TextStyle(
                         fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    "Name: ${area['name']}",
+                    "Name: ${user['firstName']} ${user['lastName']}",
                     style: const TextStyle(
                         fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 10),
-                  Text("Location: ${area['location']}"),
-                  Text("Description: ${area['description']}"),
-                  Text(
-                      "Incident Count: ${area['incidentCount']}"), // Cambiado a camelCase
-                  Text("Active: ${area['active'] == true ? 'Yes' : 'No'}"),
+                  Text("Email: ${user['institutionalEmail']}"),
+                  Text("Phone: ${user['phone'] ?? 'N/A'}"),
+                  Text("Role: ${user['userType']}"),
+                  Text("Active: ${user['active'] == true ? 'Yes' : 'No'}"),
                 ],
               ),
             );
