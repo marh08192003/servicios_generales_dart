@@ -9,11 +9,14 @@ class AppRoutes {
   static const String editUser = '/edit-user';
   static const String userDetails = '/user-details';
 
-  // Incidents
-  static const String createIncident = '/create-incident';
-
   // Physical Areas
   static const String listPhysicalAreas = '/list-physical-areas';
+  static const String createPhysicalArea = '/create-physical-area';
+  static const String editPhysicalArea = '/edit-physical-area';
+  static const String physicalAreaDetails = '/physical-area-details';
+
+  // Incidents
+  static const String createIncident = '/create-incident';
 
   // Maintenances
   static const String listMaintenances = '/list-maintenances';

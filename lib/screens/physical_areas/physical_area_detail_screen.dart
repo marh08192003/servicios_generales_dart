@@ -73,8 +73,7 @@ class _PhysicalAreaDetailScreenState extends State<PhysicalAreaDetailScreen> {
                   const SizedBox(height: 10),
                   Text("Location: ${area['location']}"),
                   Text("Description: ${area['description']}"),
-                  Text(
-                      "Incident Count: ${area['incidentCount']}"), // Cambiado a camelCase
+                  Text("Incident Count: ${area['incident_count']}"),
                   Text("Active: ${area['active'] == true ? 'Yes' : 'No'}"),
                 ],
               ),

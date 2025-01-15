@@ -10,11 +10,9 @@ class CreatePhysicalAreaScreen extends StatefulWidget {
 
 class _CreatePhysicalAreaScreenState extends State<CreatePhysicalAreaScreen> {
   final ApiService _apiService = ApiService();
-
   final TextEditingController nameController = TextEditingController();
   final TextEditingController locationController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
-
   bool isLoading = false;
 
   Future<void> _createPhysicalArea() async {
@@ -22,8 +20,8 @@ class _CreatePhysicalAreaScreenState extends State<CreatePhysicalAreaScreen> {
       "name": nameController.text,
       "location": locationController.text,
       "description": descriptionController.text,
-      "incident_count": 0, // Siempre será 0 al crear
-      "active": true // Siempre será true al crear
+      "incident_count": 0,
+      "active": true
     };
 
     setState(() {
@@ -35,7 +33,7 @@ class _CreatePhysicalAreaScreenState extends State<CreatePhysicalAreaScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Physical Area created successfully!")),
       );
-      Navigator.pop(context, true); // Indica que se creó correctamente
+      Navigator.pop(context, true);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error creating physical area: $e")),
@@ -72,7 +70,7 @@ class _CreatePhysicalAreaScreenState extends State<CreatePhysicalAreaScreen> {
                   TextField(
                     controller: descriptionController,
                     decoration: const InputDecoration(labelText: "Description"),
-                    maxLines: 3, // Campo para texto largo
+                    maxLines: 3,
                   ),
                   const SizedBox(height: 20),
                   ElevatedButton(
@@ -81,9 +79,7 @@ class _CreatePhysicalAreaScreenState extends State<CreatePhysicalAreaScreen> {
                           locationController.text.isEmpty) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text(
-                              "Name and Location are required fields!",
-                            ),
+                            content: Text("Name and Location are required!"),
                           ),
                         );
                         return;

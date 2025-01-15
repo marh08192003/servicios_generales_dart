@@ -14,11 +14,9 @@ class EditPhysicalAreaScreen extends StatefulWidget {
 
 class _EditPhysicalAreaScreenState extends State<EditPhysicalAreaScreen> {
   final ApiService _apiService = ApiService();
-
   final TextEditingController nameController = TextEditingController();
   final TextEditingController locationController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
-
   bool isLoading = false;
 
   @override
@@ -37,7 +35,6 @@ class _EditPhysicalAreaScreenState extends State<EditPhysicalAreaScreen> {
         getPhysicalAreaByIdEndpoint.replaceAll(
             "{id}", widget.physicalAreaId.toString()),
       );
-
       setState(() {
         nameController.text = response['name'];
         locationController.text = response['location'];
@@ -71,7 +68,7 @@ class _EditPhysicalAreaScreenState extends State<EditPhysicalAreaScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Area updated successfully")),
       );
-      Navigator.pop(context, true); // Indica que hubo cambios
+      Navigator.pop(context, true);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error updating area: $e")),

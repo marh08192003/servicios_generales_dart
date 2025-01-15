@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'screens/login/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/login/register_screen.dart';
+import 'screens/physical_areas/create_physical_area_screen.dart';
+import 'screens/physical_areas/edit_physical_area_screen.dart';
+import 'screens/physical_areas/physical_area_detail_screen.dart';
 import 'screens/users/list_users_screen.dart';
 import 'screens/users/edit_user_screen.dart';
 import 'screens/users/user_detail_screen.dart';
@@ -31,8 +34,13 @@ class MyApp extends StatelessWidget {
             userId: ModalRoute.of(context)!.settings.arguments as int),
         AppRoutes.userDetails: (context) => UserDetailScreen(
             userId: ModalRoute.of(context)!.settings.arguments as int),
-        AppRoutes.createIncident: (context) => CreateIncidentScreen(),
         AppRoutes.listPhysicalAreas: (context) => ListPhysicalAreasScreen(),
+        AppRoutes.createPhysicalArea: (context) => CreatePhysicalAreaScreen(),
+        AppRoutes.editPhysicalArea: (context) => EditPhysicalAreaScreen(
+            physicalAreaId: ModalRoute.of(context)!.settings.arguments as int),
+        AppRoutes.physicalAreaDetails: (context) => PhysicalAreaDetailScreen(
+            physicalAreaId: ModalRoute.of(context)!.settings.arguments as int),
+        AppRoutes.createIncident: (context) => CreateIncidentScreen(),
         AppRoutes.listMaintenances: (context) => ListMaintenancesScreen(),
         AppRoutes.assignUsersToMaintenance: (context) =>
             AssignUsersToMaintenanceScreen(),
