@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../config/app_routes.dart';
 import 'maintenances/list_assigned_maintenances_screen.dart';
 import '../services/auth_service.dart';
 import 'incidents/create_incident_screen.dart';
@@ -6,7 +7,6 @@ import 'users/edit_user_screen.dart';
 import 'incidents/list_all_incidents_screen.dart';
 import 'incidents/list_my_incidents_screen.dart';
 import 'physical_areas/list_physical_areas_screen.dart';
-import 'login/register_screen.dart';
 import 'physical_areas/create_physical_area_screen.dart';
 import 'maintenances/list_maintenances_screen.dart';
 import 'maintenances/create_maintenance_screen.dart';
@@ -123,10 +123,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     ElevatedButton(
                       onPressed: () async {
-                        final result = await Navigator.push(
+                        final result = await Navigator.pushNamed(
                           context,
-                          MaterialPageRoute(
-                              builder: (context) => RegisterScreen()),
+                          AppRoutes
+                              .register, // Uso de la ruta definida en AppRoutes
                         );
                         if (result == true) {
                           ScaffoldMessenger.of(context).showSnackBar(

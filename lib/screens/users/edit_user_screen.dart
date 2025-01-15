@@ -32,8 +32,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
   ];
 
   bool isLoading = false;
-  bool isEditingSelf =
-      false; // Verifica si el usuario está editando su propio perfil
+  bool isEditingSelf = false;
 
   @override
   void initState() {

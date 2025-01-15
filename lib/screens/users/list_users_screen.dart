@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../config/api_constants.dart';
 import '../../services/api_service.dart';
-import 'edit_user_screen.dart';
-import 'user_detail_screen.dart';
+import '../../config/app_routes.dart';
 
 class ListUsersScreen extends StatefulWidget {
   @override
@@ -35,7 +34,7 @@ class _ListUsersScreenState extends State<ListUsersScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("User deleted successfully")),
       );
-      _fetchUsers(); // Refrescar lista tras eliminar el usuario
+      _fetchUsers(); // Refresh list after deleting user
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error deleting user: $e")),
@@ -88,12 +87,10 @@ class _ListUsersScreenState extends State<ListUsersScreen> {
                       ],
                     ),
                     onTap: () {
-                      Navigator.push(
+                      Navigator.pushNamed(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              UserDetailScreen(userId: user['id']),
-                        ),
+                        AppRoutes.userDetails,
+                        arguments: user['id'],
                       );
                     },
                     trailing: Row(
@@ -102,12 +99,10 @@ class _ListUsersScreenState extends State<ListUsersScreen> {
                         IconButton(
                           icon: const Icon(Icons.edit),
                           onPressed: () async {
-                            final result = await Navigator.push(
+                            final result = await Navigator.pushNamed(
                               context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    EditUserScreen(userId: user['id']),
-                              ),
+                              AppRoutes.editUser,
+                              arguments: user['id'],
                             );
 
                             if (result == true) {

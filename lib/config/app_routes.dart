@@ -6,6 +6,8 @@ class AppRoutes {
   // User Management
   static const String register = '/register';
   static const String listUsers = '/list-users';
+  static const String editUser = '/edit-user';
+  static const String userDetails = '/user-details';
 
   // Incidents
   static const String createIncident = '/create-incident';

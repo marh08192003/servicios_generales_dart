@@ -3,6 +3,8 @@ import 'screens/login/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/login/register_screen.dart';
 import 'screens/users/list_users_screen.dart';
+import 'screens/users/edit_user_screen.dart';
+import 'screens/users/user_detail_screen.dart';
 import 'screens/physical_areas/list_physical_areas_screen.dart';
 import 'screens/incidents/create_incident_screen.dart';
 import 'screens/maintenances/list_maintenances_screen.dart';
@@ -25,6 +27,10 @@ class MyApp extends StatelessWidget {
         AppRoutes.home: (context) => HomeScreen(),
         AppRoutes.register: (context) => RegisterScreen(),
         AppRoutes.listUsers: (context) => ListUsersScreen(),
+        AppRoutes.editUser: (context) => EditUserScreen(
+            userId: ModalRoute.of(context)!.settings.arguments as int),
+        AppRoutes.userDetails: (context) => UserDetailScreen(
+            userId: ModalRoute.of(context)!.settings.arguments as int),
         AppRoutes.createIncident: (context) => CreateIncidentScreen(),
         AppRoutes.listPhysicalAreas: (context) => ListPhysicalAreasScreen(),
         AppRoutes.listMaintenances: (context) => ListMaintenancesScreen(),
