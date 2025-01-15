@@ -6,6 +6,9 @@ import 'screens/incidents/list_my_incidents_screen.dart';
 import 'screens/login/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/login/register_screen.dart';
+import 'screens/maintenances/create_maintenance_screen.dart';
+import 'screens/maintenances/edit_maintenance_screen.dart';
+import 'screens/maintenances/maintenance_detail_screen.dart';
 import 'screens/physical_areas/create_physical_area_screen.dart';
 import 'screens/physical_areas/edit_physical_area_screen.dart';
 import 'screens/physical_areas/physical_area_detail_screen.dart';
@@ -44,9 +47,6 @@ class MyApp extends StatelessWidget {
             physicalAreaId: ModalRoute.of(context)!.settings.arguments as int),
         AppRoutes.physicalAreaDetails: (context) => PhysicalAreaDetailScreen(
             physicalAreaId: ModalRoute.of(context)!.settings.arguments as int),
-        AppRoutes.listMaintenances: (context) => ListMaintenancesScreen(),
-        AppRoutes.assignUsersToMaintenance: (context) =>
-            AssignUsersToMaintenanceScreen(),
         AppRoutes.createIncident: (context) => CreateIncidentScreen(),
         AppRoutes.listMyIncidents: (context) => ListMyIncidentsScreen(),
         AppRoutes.listAllIncidents: (context) => ListAllIncidentsScreen(),
@@ -54,6 +54,14 @@ class MyApp extends StatelessWidget {
             incidentId: ModalRoute.of(context)!.settings.arguments as int),
         AppRoutes.editIncident: (context) => EditIncidentScreen(
             incidentId: ModalRoute.of(context)!.settings.arguments as int),
+        AppRoutes.listMaintenances: (context) => ListMaintenancesScreen(),
+        AppRoutes.createMaintenance: (context) => CreateMaintenanceScreen(),
+        AppRoutes.assignUsersToMaintenance: (context) =>
+            AssignUsersToMaintenanceScreen(),
+        AppRoutes.maintenanceDetails: (context) => MaintenanceDetailScreen(
+            maintenanceId: ModalRoute.of(context)!.settings.arguments as int),
+        AppRoutes.editMaintenance: (context) => EditMaintenanceScreen(
+            maintenanceId: ModalRoute.of(context)!.settings.arguments as int),
       },
     );
   }

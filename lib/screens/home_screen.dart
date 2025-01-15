@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
 import '../config/app_routes.dart';
-import 'maintenances/list_assigned_maintenances_screen.dart';
 import '../services/auth_service.dart';
 import 'users/edit_user_screen.dart';
-import 'maintenances/list_maintenances_screen.dart';
-import 'maintenances/create_maintenance_screen.dart';
-import 'maintenances/assign_users_to_maintenance_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -146,22 +142,16 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     ElevatedButton(
                       onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ListMaintenancesScreen(),
-                          ),
-                        );
+                        Navigator.pushNamed(
+                            context, AppRoutes.listMaintenances);
                       },
                       child: const Text("Manage Maintenances"),
                     ),
                     ElevatedButton(
                       onPressed: () async {
-                        final result = await Navigator.push(
+                        final result = await Navigator.pushNamed(
                           context,
-                          MaterialPageRoute(
-                            builder: (context) => CreateMaintenanceScreen(),
-                          ),
+                          AppRoutes.createMaintenance,
                         );
                         if (result == true) {
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -175,13 +165,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     ElevatedButton(
                       onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                AssignUsersToMaintenanceScreen(),
-                          ),
-                        );
+                        Navigator.pushNamed(
+                            context, AppRoutes.assignUsersToMaintenance);
                       },
                       child: const Text("Assign Users to Maintenance"),
                     ),
@@ -189,13 +174,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   if (userType == "servicios_generales") ...[
                     ElevatedButton(
                       onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                ListAssignedMaintenancesScreen(), // Nueva pantalla
-                          ),
-                        );
+                        Navigator.pushNamed(
+                            context, AppRoutes.listAssignedMaintenances);
                       },
                       child: const Text("View Assigned Maintenances"),
                     ),

@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../config/app_routes.dart';
 import '../../services/api_service.dart';
 import '../../config/api_constants.dart';
-import 'edit_maintenance_screen.dart';
 import 'create_maintenance_screen.dart';
-import 'maintenance_detail_screen.dart';
 
 class ListMaintenancesScreen extends StatefulWidget {
   @override
@@ -104,13 +103,10 @@ class _ListMaintenancesScreenState extends State<ListMaintenancesScreen> {
                         IconButton(
                           icon: const Icon(Icons.edit, color: Colors.blue),
                           onPressed: () {
-                            Navigator.push(
+                            Navigator.pushNamed(
                               context,
-                              MaterialPageRoute(
-                                builder: (context) => EditMaintenanceScreen(
-                                  maintenanceId: maintenance['id'],
-                                ),
-                              ),
+                              AppRoutes.editMaintenance,
+                              arguments: maintenance['id'],
                             ).then((_) => _fetchMaintenances());
                           },
                         ),
@@ -145,13 +141,10 @@ class _ListMaintenancesScreenState extends State<ListMaintenancesScreen> {
                       ],
                     ),
                     onTap: () {
-                      Navigator.push(
+                      Navigator.pushNamed(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => MaintenanceDetailScreen(
-                            maintenanceId: maintenance['id'],
-                          ),
-                        ),
+                        AppRoutes.maintenanceDetails,
+                        arguments: maintenance['id'],
                       );
                     },
                   ),

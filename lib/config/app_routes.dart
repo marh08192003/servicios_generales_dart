@@ -24,5 +24,9 @@ class AppRoutes {
 
   // Maintenances
   static const String listMaintenances = '/list-maintenances';
+  static const String createMaintenance = '/create-maintenance';
   static const String assignUsersToMaintenance = '/assign-users-to-maintenance';
+  static const String listAssignedMaintenances = '/list-assigned-maintenances';
+  static const String maintenanceDetails = '/maintenance-details';
+  static const String editMaintenance = '/edit-maintenance';
 }
