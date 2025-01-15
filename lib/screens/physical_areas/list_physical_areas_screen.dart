@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import '../../config/app_routes.dart';
 import '../../services/api_service.dart';
 import '../../config/api_constants.dart';
-import 'physical_area_detail_screen.dart';
-import 'edit_physical_area_screen.dart';
 
 class ListPhysicalAreasScreen extends StatefulWidget {
   @override

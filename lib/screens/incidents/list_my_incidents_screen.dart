@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../config/app_routes.dart';
 import '../../services/api_service.dart';
 import '../../config/api_constants.dart';
-import 'edit_incident_screen.dart';
-import 'incident_detail_screen.dart';
 
 class ListMyIncidentsScreen extends StatefulWidget {
   @override
@@ -95,13 +94,10 @@ class _ListMyIncidentsScreenState extends State<ListMyIncidentsScreen> {
                       ],
                     ),
                     onTap: () {
-                      Navigator.push(
+                      Navigator.pushNamed(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => IncidentDetailScreen(
-                            incidentId: incident['id'],
-                          ),
-                        ),
+                        AppRoutes.incidentDetails,
+                        arguments: incident['id'],
                       );
                     },
                     trailing: Row(
@@ -110,13 +106,10 @@ class _ListMyIncidentsScreenState extends State<ListMyIncidentsScreen> {
                         IconButton(
                           icon: const Icon(Icons.edit),
                           onPressed: () {
-                            Navigator.push(
+                            Navigator.pushNamed(
                               context,
-                              MaterialPageRoute(
-                                builder: (context) => EditIncidentScreen(
-                                  incidentId: incident['id'],
-                                ),
-                              ),
+                              AppRoutes.editIncident,
+                              arguments: incident['id'],
                             );
                           },
                         ),

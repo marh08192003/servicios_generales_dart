@@ -17,6 +17,10 @@ class AppRoutes {
 
   // Incidents
   static const String createIncident = '/create-incident';
+  static const String listMyIncidents = '/list-my-incidents';
+  static const String listAllIncidents = '/list-all-incidents';
+  static const String incidentDetails = '/incident-details';
+  static const String editIncident = '/edit-incident';
 
   // Maintenances
   static const String listMaintenances = '/list-maintenances';

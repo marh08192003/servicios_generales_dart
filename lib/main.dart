@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'screens/incidents/edit_incident_screen.dart';
+import 'screens/incidents/incident_detail_screen.dart';
+import 'screens/incidents/list_all_incidents_screen.dart';
+import 'screens/incidents/list_my_incidents_screen.dart';
 import 'screens/login/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/login/register_screen.dart';
@@ -40,10 +44,16 @@ class MyApp extends StatelessWidget {
             physicalAreaId: ModalRoute.of(context)!.settings.arguments as int),
         AppRoutes.physicalAreaDetails: (context) => PhysicalAreaDetailScreen(
             physicalAreaId: ModalRoute.of(context)!.settings.arguments as int),
-        AppRoutes.createIncident: (context) => CreateIncidentScreen(),
         AppRoutes.listMaintenances: (context) => ListMaintenancesScreen(),
         AppRoutes.assignUsersToMaintenance: (context) =>
             AssignUsersToMaintenanceScreen(),
+        AppRoutes.createIncident: (context) => CreateIncidentScreen(),
+        AppRoutes.listMyIncidents: (context) => ListMyIncidentsScreen(),
+        AppRoutes.listAllIncidents: (context) => ListAllIncidentsScreen(),
+        AppRoutes.incidentDetails: (context) => IncidentDetailScreen(
+            incidentId: ModalRoute.of(context)!.settings.arguments as int),
+        AppRoutes.editIncident: (context) => EditIncidentScreen(
+            incidentId: ModalRoute.of(context)!.settings.arguments as int),
       },
     );
   }
