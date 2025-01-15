@@ -71,7 +71,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               TextField(
                 controller: emailController,
-                decoration: const InputDecoration(labelText: "Institutional Email"),
+                decoration:
+                    const InputDecoration(labelText: "Institutional Email"),
                 keyboardType: TextInputType.emailAddress,
               ),
               TextField(
@@ -96,12 +97,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                   if (success) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("User registered successfully!")),
+                      const SnackBar(
+                          content: Text("User registered successfully!")),
                     );
                     Navigator.pop(context);
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("User registration failed!")),
+                      const SnackBar(
+                          content: Text("User registration failed!")),
                     );
                   }
                 },

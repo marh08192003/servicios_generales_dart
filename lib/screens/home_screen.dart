@@ -204,7 +204,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           context,
                           MaterialPageRoute(
                             builder: (context) =>
-                                AssignedMaintenancesScreen(), // Nueva pantalla
+                                ListAssignedMaintenancesScreen(), // Nueva pantalla
                           ),
                         );
                       },

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../config/app_routes.dart';
 import '../../services/auth_service.dart';
 
 class LoginScreen extends StatelessWidget {
@@ -10,21 +11,21 @@ class LoginScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Login")),
+      appBar: AppBar(title: const Text("Login")),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             TextField(
               controller: emailController,
-              decoration: InputDecoration(labelText: "Email"),
+              decoration: const InputDecoration(labelText: "Email"),
             ),
             TextField(
               controller: passwordController,
-              decoration: InputDecoration(labelText: "Password"),
+              decoration: const InputDecoration(labelText: "Password"),
               obscureText: true,
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () async {
                 final email = emailController.text;
@@ -33,20 +34,20 @@ class LoginScreen extends StatelessWidget {
                 final success = await _authService.login(email, password);
 
                 if (success) {
-                  Navigator.pushReplacementNamed(context, '/home');
+                  Navigator.pushReplacementNamed(context, AppRoutes.home);
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("Login failed!")),
+                    const SnackBar(content: Text("Login failed!")),
                   );
                 }
               },
-              child: Text("Login"),
+              child: const Text("Login"),
             ),
             TextButton(
               onPressed: () {
-                Navigator.pushNamed(context, '/register');
+                Navigator.pushNamed(context, AppRoutes.register);
               },
-              child: Text("Don't have an account? Register here."),
+              child: const Text("Don't have an account? Register here."),
             ),
           ],
         ),

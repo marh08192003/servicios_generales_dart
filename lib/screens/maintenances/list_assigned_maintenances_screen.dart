@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
 import '../../config/api_constants.dart';
 
-class AssignedMaintenancesScreen extends StatefulWidget {
+class ListAssignedMaintenancesScreen extends StatefulWidget {
   @override
-  _AssignedMaintenancesScreenState createState() =>
-      _AssignedMaintenancesScreenState();
+  _ListAssignedMaintenancesScreenState createState() =>
+      _ListAssignedMaintenancesScreenState();
 }
 
-class _AssignedMaintenancesScreenState
-    extends State<AssignedMaintenancesScreen> {
+class _ListAssignedMaintenancesScreenState
+    extends State<ListAssignedMaintenancesScreen> {
   final ApiService _apiService = ApiService();
   late Future<List<dynamic>> _assignedMaintenances;
 
