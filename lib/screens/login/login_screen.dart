@@ -2,11 +2,41 @@ import 'package:flutter/material.dart';
 import '../../config/app_routes.dart';
 import '../../services/auth_service.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
+  @override
+  _LoginScreenState createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
   final AuthService _authService = AuthService();
 
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+
+  bool _isLoading = false;
+
+  Future<void> _handleLogin() async {
+    setState(() {
+      _isLoading = true; // Mostrar animación de carga
+    });
+
+    final email = emailController.text;
+    final password = passwordController.text;
+
+    final success = await _authService.login(email, password);
+
+    setState(() {
+      _isLoading = false; // Ocultar animación de carga
+    });
+
+    if (success) {
+      Navigator.pushReplacementNamed(context, AppRoutes.home);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Login failed!")),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,35 +103,22 @@ class LoginScreen extends StatelessWidget {
                       obscureText: true,
                     ),
                     const SizedBox(height: 30),
-                    ElevatedButton(
-                      onPressed: () async {
-                        final email = emailController.text;
-                        final password = passwordController.text;
-
-                        final success =
-                            await _authService.login(email, password);
-
-                        if (success) {
-                          Navigator.pushReplacementNamed(
-                              context, AppRoutes.home);
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Login failed!")),
-                          );
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        minimumSize: const Size(double.infinity, 50),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      child: const Text(
-                        "Iniciar sesión",
-                        style: TextStyle(fontSize: 18),
-                      ),
-                    ),
+                    _isLoading
+                        ? const CircularProgressIndicator()
+                        : ElevatedButton(
+                            onPressed: _handleLogin,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green,
+                              minimumSize: const Size(double.infinity, 50),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            child: const Text(
+                              "Iniciar sesión",
+                              style: TextStyle(fontSize: 18),
+                            ),
+                          ),
                   ],
                 ),
               ),
