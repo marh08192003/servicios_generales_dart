@@ -8,6 +8,7 @@ import 'screens/home_screen.dart';
 import 'screens/login/register_screen.dart';
 import 'screens/maintenances/create_maintenance_screen.dart';
 import 'screens/maintenances/edit_maintenance_screen.dart';
+import 'screens/maintenances/list_assigned_maintenances_screen.dart';
 import 'screens/maintenances/maintenance_detail_screen.dart';
 import 'screens/physical_areas/create_physical_area_screen.dart';
 import 'screens/physical_areas/edit_physical_area_screen.dart';
@@ -34,19 +35,23 @@ class MyApp extends StatelessWidget {
       initialRoute: AppRoutes.login,
       routes: {
         AppRoutes.login: (context) => LoginScreen(),
-        AppRoutes.home: (context) => HomeScreen(),
         AppRoutes.register: (context) => RegisterScreen(),
+
+        AppRoutes.home: (context) => HomeScreen(),
+        
         AppRoutes.listUsers: (context) => ListUsersScreen(),
         AppRoutes.editUser: (context) => EditUserScreen(
             userId: ModalRoute.of(context)!.settings.arguments as int),
         AppRoutes.userDetails: (context) => UserDetailScreen(
             userId: ModalRoute.of(context)!.settings.arguments as int),
+
         AppRoutes.listPhysicalAreas: (context) => ListPhysicalAreasScreen(),
         AppRoutes.createPhysicalArea: (context) => CreatePhysicalAreaScreen(),
         AppRoutes.editPhysicalArea: (context) => EditPhysicalAreaScreen(
             physicalAreaId: ModalRoute.of(context)!.settings.arguments as int),
         AppRoutes.physicalAreaDetails: (context) => PhysicalAreaDetailScreen(
             physicalAreaId: ModalRoute.of(context)!.settings.arguments as int),
+
         AppRoutes.createIncident: (context) => CreateIncidentScreen(),
         AppRoutes.listMyIncidents: (context) => ListMyIncidentsScreen(),
         AppRoutes.listAllIncidents: (context) => ListAllIncidentsScreen(),
@@ -54,6 +59,7 @@ class MyApp extends StatelessWidget {
             incidentId: ModalRoute.of(context)!.settings.arguments as int),
         AppRoutes.editIncident: (context) => EditIncidentScreen(
             incidentId: ModalRoute.of(context)!.settings.arguments as int),
+            
         AppRoutes.listMaintenances: (context) => ListMaintenancesScreen(),
         AppRoutes.createMaintenance: (context) => CreateMaintenanceScreen(),
         AppRoutes.assignUsersToMaintenance: (context) =>
@@ -62,6 +68,8 @@ class MyApp extends StatelessWidget {
             maintenanceId: ModalRoute.of(context)!.settings.arguments as int),
         AppRoutes.editMaintenance: (context) => EditMaintenanceScreen(
             maintenanceId: ModalRoute.of(context)!.settings.arguments as int),
+        AppRoutes.listAssignedMaintenances: (context) => ListAssignedMaintenancesScreen(),
+    
       },
     );
   }
