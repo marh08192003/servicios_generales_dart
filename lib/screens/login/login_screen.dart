@@ -33,7 +33,7 @@ class _LoginScreenState extends State<LoginScreen> {
       Navigator.pushReplacementNamed(context, AppRoutes.home);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Login failed!")),
+        const SnackBar(content: Text("Inicio de sesión fallido. Verifique sus credenciales.")),
       );
     }
   }
@@ -48,41 +48,41 @@ class _LoginScreenState extends State<LoginScreen> {
           color: Colors.white,
         ),
         child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(height: 100),
-              // Logo
-              Image.asset(
-                'assets/images/uceva_logo.png',
-                width: 120,
-                height: 120,
-              ),
-              const SizedBox(height: 30),
-              // Título
-              const Text(
-                "Inicio de sesión",
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const SizedBox(height: 80),
+                // Logo
+                Image.asset(
+                  'assets/images/uceva_logo.png',
+                  width: 150,
+                  height: 150,
                 ),
-              ),
-              const SizedBox(height: 40),
-              // Formulario de inicio de sesión
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32),
-                child: Column(
+                const SizedBox(height: 40),
+                // Título
+                const Text(
+                  "Inicio de sesión",
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green,
+                  ),
+                ),
+                const SizedBox(height: 40),
+                // Formulario de inicio de sesión
+                Column(
                   children: [
                     TextField(
                       controller: emailController,
                       decoration: InputDecoration(
                         labelText: "Correo electrónico",
-                        labelStyle: TextStyle(color: Colors.grey[700]),
+                        labelStyle: const TextStyle(color: Colors.black54),
                         filled: true,
                         fillColor: Colors.grey[200],
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
                         ),
                       ),
@@ -92,11 +92,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       controller: passwordController,
                       decoration: InputDecoration(
                         labelText: "Contraseña",
-                        labelStyle: TextStyle(color: Colors.grey[700]),
+                        labelStyle: const TextStyle(color: Colors.black54),
                         filled: true,
                         fillColor: Colors.grey[200],
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
                         ),
                       ),
@@ -111,33 +111,45 @@ class _LoginScreenState extends State<LoginScreen> {
                               backgroundColor: Colors.green,
                               minimumSize: const Size(double.infinity, 50),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
+                                borderRadius: BorderRadius.circular(12),
                               ),
                             ),
                             child: const Text(
                               "Iniciar sesión",
-                              style: TextStyle(fontSize: 18),
+                              style: TextStyle(fontSize: 18, color: Colors.white),
                             ),
                           ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 20),
-              // Link de registro
-              TextButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, AppRoutes.register);
-                },
-                child: const Text(
-                  "¿No tienes cuenta? Registro",
-                  style: TextStyle(
-                    color: Colors.green,
-                    fontSize: 16,
-                    decoration: TextDecoration.underline,
-                  ),
+                const SizedBox(height: 20),
+                // Link de registro
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      "¿No tienes cuenta?",
+                      style: TextStyle(
+                        color: Colors.black54,
+                        fontSize: 16,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pushNamed(context, AppRoutes.register);
+                      },
+                      child: const Text(
+                        "Registro",
+                        style: TextStyle(
+                          color: Colors.green,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
