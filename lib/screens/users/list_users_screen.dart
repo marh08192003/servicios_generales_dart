@@ -11,7 +11,11 @@ class ListUsersScreen extends StatefulWidget {
 class _ListUsersScreenState extends State<ListUsersScreen> {
   final ApiService _apiService = ApiService();
 
-  late Future<List<dynamic>> _users;
+  List<dynamic> _users = []; // Lista de usuarios de la página actual
+  int _currentPage = 0; // Página actual
+  final int _pageSize = 4; // Tamaño de la página
+  bool _isLoading = false; // Si está cargando datos
+  bool _hasMore = true; // Si hay más datos disponibles
 
   @override
   void initState() {
@@ -19,12 +23,31 @@ class _ListUsersScreenState extends State<ListUsersScreen> {
     _fetchUsers();
   }
 
-  void _fetchUsers() {
+  Future<void> _fetchUsers({int page = 0}) async {
     setState(() {
-      _users = _apiService
-          .get(listUsersEndpoint)
-          .then((data) => data as List<dynamic>);
+      _isLoading = true;
     });
+
+    try {
+      final response = await _apiService
+          .get("$listUsersEndpoint?page=$page&size=$_pageSize");
+      final fetchedUsers = response as List<dynamic>;
+
+      setState(() {
+        _users = fetchedUsers;
+        _isLoading = false;
+        _hasMore = fetchedUsers.length ==
+            _pageSize; // Si la página está completa, hay más datos
+        _currentPage = page;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error al cargar usuarios: $e")),
+      );
+    }
   }
 
   Future<void> _deleteUser(int userId) async {
@@ -32,121 +55,179 @@ class _ListUsersScreenState extends State<ListUsersScreen> {
       await _apiService
           .delete(deleteUserEndpoint.replaceAll("{id}", userId.toString()));
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("User deleted successfully")),
+        const SnackBar(content: Text("Usuario eliminado exitosamente.")),
       );
-      _fetchUsers(); // Refresh list after deleting user
+      _fetchUsers(
+          page: _currentPage); // Refrescar la página actual después de eliminar
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error deleting user: $e")),
+        SnackBar(content: Text("Error al eliminar usuario: $e")),
       );
     }
+  }
+
+  Widget _buildPaginationControls() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Botón de "Anterior"
+          ElevatedButton(
+            onPressed: _currentPage > 0 && !_isLoading
+                ? () {
+                    _fetchUsers(page: _currentPage - 1);
+                  }
+                : null,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+            ),
+            child: const Text("Anterior"),
+          ),
+
+          // Botón de "Siguiente"
+          ElevatedButton(
+            onPressed: _hasMore && !_isLoading
+                ? () {
+                    _fetchUsers(page: _currentPage + 1);
+                  }
+                : null,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+            ),
+            child: const Text("Siguiente"),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Users"),
+        title: const Text("Listado de Usuarios"),
+        backgroundColor: Colors.green,
         leading: const BackButton(),
       ),
-      body: FutureBuilder<List<dynamic>>(
-        future: _users,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(
-              child: Text(
-                "Error loading users: ${snapshot.error}",
-                style: const TextStyle(color: Colors.red),
-              ),
-            );
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(
-              child: Text("No users found"),
-            );
-          } else {
-            final users = snapshot.data!;
-            return ListView.builder(
-              itemCount: users.length,
-              itemBuilder: (context, index) {
-                final user = users[index];
-                return Card(
-                  margin:
-                      const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                  child: ListTile(
-                    title: Text(
-                      "${user['firstName']} ${user['lastName']}",
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text("Email: ${user['institutionalEmail']}"),
-                        Text("Role: ${user['userType']}"),
-                      ],
-                    ),
-                    onTap: () {
-                      Navigator.pushNamed(
-                        context,
-                        AppRoutes.userDetails,
-                        arguments: user['id'],
+      body: Column(
+        children: [
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : ListView.builder(
+                    itemCount: _users.length,
+                    itemBuilder: (context, index) {
+                      final user = _users[index];
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.pushNamed(
+                            context,
+                            AppRoutes.userDetails,
+                            arguments: user['id'],
+                          );
+                        },
+                        child: Card(
+                          elevation: 4,
+                          margin: const EdgeInsets.symmetric(
+                              vertical: 8, horizontal: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            "ID: ${user['id']} || ${user['firstName']} ${user['lastName']}",
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                          "Correo: ${user['institutionalEmail']}"),
+                                      Text("Rol: ${user['userType']}"),
+                                    ],
+                                  ),
+                                ),
+                                Row(
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.edit,
+                                        color: Colors.blue,
+                                      ),
+                                      onPressed: () async {
+                                        final result =
+                                            await Navigator.pushNamed(
+                                          context,
+                                          AppRoutes.editUser,
+                                          arguments: user['id'],
+                                        );
+                                        if (result == true) {
+                                          _fetchUsers(page: _currentPage);
+                                        }
+                                      },
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.delete,
+                                        color: Colors.red,
+                                      ),
+                                      onPressed: () async {
+                                        final confirmed =
+                                            await showDialog<bool>(
+                                          context: context,
+                                          builder: (context) => AlertDialog(
+                                            title: const Text(
+                                                "Confirmar eliminación"),
+                                            content: const Text(
+                                                "¿Está seguro de eliminar este usuario?"),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () => Navigator.pop(
+                                                    context, false),
+                                                child: const Text("Cancelar"),
+                                              ),
+                                              TextButton(
+                                                onPressed: () => Navigator.pop(
+                                                    context, true),
+                                                child: const Text("Eliminar"),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                        if (confirmed == true) {
+                                          await _deleteUser(user['id']);
+                                        }
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       );
                     },
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit),
-                          onPressed: () async {
-                            final result = await Navigator.pushNamed(
-                              context,
-                              AppRoutes.editUser,
-                              arguments: user['id'],
-                            );
-
-                            if (result == true) {
-                              _fetchUsers();
-                            }
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () async {
-                            final confirmed = await showDialog<bool>(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: const Text("Confirm Deletion"),
-                                content: const Text(
-                                    "Are you sure you want to delete this user?"),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.pop(context, false),
-                                    child: const Text("Cancel"),
-                                  ),
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.pop(context, true),
-                                    child: const Text("Delete"),
-                                  ),
-                                ],
-                              ),
-                            );
-
-                            if (confirmed == true) {
-                              await _deleteUser(user['id']);
-                            }
-                          },
-                        ),
-                      ],
-                    ),
                   ),
-                );
-              },
-            );
-          }
-        },
+          ),
+          _buildPaginationControls(), // Controles de paginación
+        ],
       ),
     );
   }
