@@ -67,7 +67,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error loading user data: $e")),
+        SnackBar(content: Text("Error al cargar los datos: $e")),
       );
     } finally {
       setState(() {
@@ -96,12 +96,12 @@ class _EditUserScreenState extends State<EditUserScreen> {
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("User updated successfully")),
+        const SnackBar(content: Text("Usuario actualizado exitosamente")),
       );
       Navigator.pop(context, true);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error updating user: $e")),
+        SnackBar(content: Text("Error al actualizar el usuario: $e")),
       );
     }
   }
@@ -110,95 +110,184 @@ class _EditUserScreenState extends State<EditUserScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Edit User"),
+        title: const Text("Editar Usuario"),
+        backgroundColor: Colors.green,
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ListView(
-                children: [
-                  TextField(
-                    controller: idController,
-                    decoration: const InputDecoration(labelText: "User ID"),
-                    readOnly: true,
+          : SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  TextField(
-                    controller: firstNameController,
-                    decoration: const InputDecoration(labelText: "First Name"),
-                  ),
-                  TextField(
-                    controller: lastNameController,
-                    decoration: const InputDecoration(labelText: "Last Name"),
-                  ),
-                  TextField(
-                    controller: emailController,
-                    decoration: const InputDecoration(labelText: "Email"),
-                  ),
-                  TextField(
-                    controller: phoneController,
-                    decoration: const InputDecoration(labelText: "Phone"),
-                  ),
-                  if (!isEditingSelf)
-                    DropdownButtonFormField<String>(
-                      value: selectedUserType,
-                      items: userTypes.map((type) {
-                        return DropdownMenuItem<String>(
-                          value: type,
-                          child: Text(type),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          selectedUserType = value;
-                        });
-                      },
-                      decoration: const InputDecoration(labelText: "User Type"),
-                    )
-                  else
-                    TextField(
-                      controller: TextEditingController(text: selectedUserType),
-                      readOnly: true,
-                      decoration: const InputDecoration(labelText: "User Type"),
-                    ),
-                  TextField(
-                    controller: passwordController,
-                    decoration: const InputDecoration(
-                      labelText: "Password (leave empty to keep current)",
-                    ),
-                    obscureText: true,
-                  ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () async {
-                      final confirmed = await showDialog<bool>(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text("Confirm Changes"),
-                          content: const Text(
-                              "Are you sure you want to save these changes?"),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, false),
-                              child: const Text("Cancel"),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, true),
-                              child: const Text("Confirm"),
-                            ),
-                          ],
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Center(
+                          child: Icon(
+                            Icons.edit,
+                            size: 80,
+                            color: Colors.green,
+                          ),
                         ),
-                      );
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          controller: idController,
+                          label: "ID de Usuario",
+                          readOnly: true,
+                        ),
+                        const SizedBox(height: 10),
+                        _buildTextField(
+                          controller: firstNameController,
+                          label: "Nombre",
+                        ),
+                        const SizedBox(height: 10),
+                        _buildTextField(
+                          controller: lastNameController,
+                          label: "Apellido",
+                        ),
+                        const SizedBox(height: 10),
+                        _buildTextField(
+                          controller: emailController,
+                          label: "Correo Electrónico",
+                        ),
+                        const SizedBox(height: 10),
+                        _buildTextField(
+                          controller: phoneController,
+                          label: "Teléfono",
+                        ),
+                        const SizedBox(height: 10),
+                        if (!isEditingSelf)
+                          _buildDropdownField(
+                            value: selectedUserType,
+                            items: userTypes,
+                            label: "Tipo de Usuario",
+                            onChanged: (value) {
+                              setState(() {
+                                selectedUserType = value!;
+                              });
+                            },
+                          )
+                        else
+                          _buildTextField(
+                            controller:
+                                TextEditingController(text: selectedUserType),
+                            label: "Tipo de Usuario",
+                            readOnly: true,
+                          ),
+                        const SizedBox(height: 10),
+                        _buildTextField(
+                          controller: passwordController,
+                          label: "Contraseña (opcional)",
+                          obscureText: true,
+                        ),
+                        const SizedBox(height: 20),
+                        Center(
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              final confirmed = await showDialog<bool>(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text("Confirmar cambios"),
+                                  content: const Text(
+                                      "¿Está seguro de guardar los cambios?"),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, false),
+                                      child: const Text("Cancelar"),
+                                    ),
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, true),
+                                      child: const Text("Confirmar"),
+                                    ),
+                                  ],
+                                ),
+                              );
 
-                      if (confirmed == true) {
-                        await _updateUser();
-                      }
-                    },
-                    child: const Text("Save Changes"),
+                              if (confirmed == true) {
+                                await _updateUser();
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green,
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 12,
+                                horizontal: 24,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            child: const Text(
+                              "Guardar Cambios",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ],
+                ),
               ),
             ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    bool readOnly = false,
+    bool obscureText = false,
+  }) {
+    return TextField(
+      controller: controller,
+      readOnly: readOnly,
+      obscureText: obscureText,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        filled: true,
+        fillColor: Colors.grey[200],
+      ),
+    );
+  }
+
+  Widget _buildDropdownField({
+    required String? value,
+    required List<String> items,
+    required String label,
+    required ValueChanged<String?> onChanged,
+  }) {
+    return DropdownButtonFormField<String>(
+      value: value,
+      items: items.map((type) {
+        return DropdownMenuItem<String>(
+          value: type,
+          child: Text(type),
+        );
+      }).toList(),
+      onChanged: onChanged,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        filled: true,
+        fillColor: Colors.grey[200],
+      ),
     );
   }
 }
