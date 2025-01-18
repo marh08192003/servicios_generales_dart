@@ -13,6 +13,7 @@ class _CreatePhysicalAreaScreenState extends State<CreatePhysicalAreaScreen> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController locationController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
   bool isLoading = false;
 
   Future<void> _createPhysicalArea() async {
@@ -31,12 +32,12 @@ class _CreatePhysicalAreaScreenState extends State<CreatePhysicalAreaScreen> {
     try {
       await _apiService.post(createPhysicalAreaEndpoint, newArea);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Physical Area created successfully!")),
+        const SnackBar(content: Text("Área física creada exitosamente.")),
       );
       Navigator.pop(context, true);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error creating physical area: $e")),
+        SnackBar(content: Text("Error al crear el área física: $e")),
       );
     } finally {
       setState(() {
@@ -45,50 +46,110 @@ class _CreatePhysicalAreaScreenState extends State<CreatePhysicalAreaScreen> {
     }
   }
 
+  Widget _buildTextField({
+    required String label,
+    required TextEditingController controller,
+    int maxLines = 1,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      maxLines: maxLines,
+      validator: validator,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        filled: true,
+        fillColor: Colors.grey[200],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Create Physical Area"),
+        title: const Text("Crear Área Física"),
+        backgroundColor: Colors.green,
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ListView(
-                children: [
-                  TextField(
-                    controller: nameController,
-                    decoration: const InputDecoration(labelText: "Name"),
-                  ),
-                  const SizedBox(height: 10),
-                  TextField(
-                    controller: locationController,
-                    decoration: const InputDecoration(labelText: "Location"),
-                  ),
-                  const SizedBox(height: 10),
-                  TextField(
-                    controller: descriptionController,
-                    decoration: const InputDecoration(labelText: "Description"),
-                    maxLines: 3,
-                  ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () async {
-                      if (nameController.text.isEmpty ||
-                          locationController.text.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Name and Location are required!"),
+          : SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "Ingrese los detalles del área física:",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _buildTextField(
+                        label: "Nombre",
+                        controller: nameController,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return "El nombre es obligatorio.";
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      _buildTextField(
+                        label: "Ubicación",
+                        controller: locationController,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return "La ubicación es obligatoria.";
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      _buildTextField(
+                        label: "Descripción",
+                        controller: descriptionController,
+                        maxLines: 3,
+                      ),
+                      const SizedBox(height: 20),
+                      Center(
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            if (_formKey.currentState!.validate()) {
+                              await _createPhysicalArea();
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 12,
+                              horizontal: 24,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
-                        );
-                        return;
-                      }
-                      await _createPhysicalArea();
-                    },
-                    child: const Text("Create"),
+                          child: const Text(
+                            "Crear Área",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
     );
