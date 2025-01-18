@@ -33,7 +33,9 @@ class _EditPhysicalAreaScreenState extends State<EditPhysicalAreaScreen> {
     try {
       final response = await _apiService.get(
         getPhysicalAreaByIdEndpoint.replaceAll(
-            "{id}", widget.physicalAreaId.toString()),
+          "{id}",
+          widget.physicalAreaId.toString(),
+        ),
       );
       setState(() {
         nameController.text = response['name'];
@@ -42,7 +44,7 @@ class _EditPhysicalAreaScreenState extends State<EditPhysicalAreaScreen> {
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error loading area data: $e")),
+        SnackBar(content: Text("Error al cargar los datos: $e")),
       );
     } finally {
       setState(() {
@@ -61,17 +63,19 @@ class _EditPhysicalAreaScreenState extends State<EditPhysicalAreaScreen> {
     try {
       await _apiService.put(
         editPhysicalAreaEndpoint.replaceAll(
-            "{id}", widget.physicalAreaId.toString()),
+          "{id}",
+          widget.physicalAreaId.toString(),
+        ),
         updatedArea,
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Area updated successfully")),
+        const SnackBar(content: Text("Área actualizada exitosamente")),
       );
       Navigator.pop(context, true);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error updating area: $e")),
+        SnackBar(content: Text("Error al actualizar el área: $e")),
       );
     }
   }
@@ -80,58 +84,121 @@ class _EditPhysicalAreaScreenState extends State<EditPhysicalAreaScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Edit Physical Area"),
+        title: const Text("Editar Área Física"),
+        backgroundColor: Colors.green,
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ListView(
-                children: [
-                  TextField(
-                    controller: nameController,
-                    decoration: const InputDecoration(labelText: "Name"),
+          : SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  TextField(
-                    controller: locationController,
-                    decoration: const InputDecoration(labelText: "Location"),
-                  ),
-                  TextField(
-                    controller: descriptionController,
-                    decoration: const InputDecoration(labelText: "Description"),
-                    maxLines: 3,
-                  ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () async {
-                      final confirmed = await showDialog<bool>(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text("Confirm Changes"),
-                          content: const Text(
-                              "Are you sure you want to save these changes?"),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, false),
-                              child: const Text("Cancel"),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, true),
-                              child: const Text("Confirm"),
-                            ),
-                          ],
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Center(
+                          child: Icon(
+                            Icons.edit_location,
+                            size: 80,
+                            color: Colors.green,
+                          ),
                         ),
-                      );
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          controller: nameController,
+                          label: "Nombre del Área",
+                        ),
+                        const SizedBox(height: 10),
+                        _buildTextField(
+                          controller: locationController,
+                          label: "Ubicación",
+                        ),
+                        const SizedBox(height: 10),
+                        _buildTextField(
+                          controller: descriptionController,
+                          label: "Descripción",
+                          maxLines: 3,
+                        ),
+                        const SizedBox(height: 20),
+                        Center(
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              final confirmed = await showDialog<bool>(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text("Confirmar cambios"),
+                                  content: const Text(
+                                      "¿Está seguro de guardar los cambios?"),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, false),
+                                      child: const Text("Cancelar"),
+                                    ),
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, true),
+                                      child: const Text("Confirmar"),
+                                    ),
+                                  ],
+                                ),
+                              );
 
-                      if (confirmed == true) {
-                        await _updatePhysicalArea();
-                      }
-                    },
-                    child: const Text("Save Changes"),
+                              if (confirmed == true) {
+                                await _updatePhysicalArea();
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green,
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 12,
+                                horizontal: 24,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            child: const Text(
+                              "Guardar Cambios",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ],
+                ),
               ),
             ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    int maxLines = 1,
+  }) {
+    return TextField(
+      controller: controller,
+      maxLines: maxLines,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        filled: true,
+        fillColor: Colors.grey[200],
+      ),
     );
   }
 }
