@@ -29,33 +29,75 @@ class _MaintenanceDetailScreenState extends State<MaintenanceDetailScreen> {
     setState(() {
       _maintenanceDetails = _apiService
           .get(
-            getMaintenanceByIdEndpoint.replaceAll(
-              "{id}",
-              widget.maintenanceId.toString(),
-            ),
-          )
-          .then((data) => data as Map<String, dynamic>);
+        getMaintenanceByIdEndpoint.replaceAll(
+          "{id}",
+          widget.maintenanceId.toString(),
+        ),
+      )
+          .then((data) async {
+        // Fetch the name of the physical area
+        final physicalArea = await _apiService.get(
+          getPhysicalAreaByIdEndpoint.replaceAll(
+            "{id}",
+            data['physicalAreaId'].toString(),
+          ),
+        );
+        data['physicalAreaName'] = physicalArea['name'];
+        return data;
+      });
     });
   }
 
   void _fetchAssignedUsers() {
     setState(() {
       _assignedUsers = _apiService.get(listMaintenanceAssignmentsEndpoint).then(
-        (data) {
-          return (data as List<dynamic>)
-              .where((assignment) =>
-                  assignment['maintenanceId'] == widget.maintenanceId)
-              .toList();
+        (data) async {
+          List<dynamic> details = [];
+          for (var assignment in (data as List<dynamic>).where((assignment) =>
+              assignment['maintenanceId'] == widget.maintenanceId)) {
+            // Fetch user details for each assigned user
+            final user = await _apiService.get(
+              getUserByIdEndpoint.replaceAll(
+                "{id}",
+                assignment['userId'].toString(),
+              ),
+            );
+            details.add({
+              "userId": user['id'],
+              "userName": "${user['firstName']} ${user['lastName']}",
+              "completed": assignment['completed'],
+            });
+          }
+          return details;
         },
       );
     });
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "$label: ",
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          Expanded(
+            child: Text(value),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Maintenance Details"),
+        title: const Text("Detalles del Mantenimiento"),
+        backgroundColor: Colors.green,
       ),
       body: FutureBuilder<Map<String, dynamic>>(
         future: _maintenanceDetails,
@@ -64,11 +106,11 @@ class _MaintenanceDetailScreenState extends State<MaintenanceDetailScreen> {
             return const Center(child: CircularProgressIndicator());
           } else if (maintenanceSnapshot.hasError) {
             return Center(
-              child:
-                  Text("Error loading details: ${maintenanceSnapshot.error}"),
+              child: Text(
+                  "Error al cargar detalles: ${maintenanceSnapshot.error}"),
             );
           } else if (!maintenanceSnapshot.hasData) {
-            return const Center(child: Text("Maintenance not found."));
+            return const Center(child: Text("Mantenimiento no encontrado."));
           } else {
             final maintenance = maintenanceSnapshot.data!;
             return FutureBuilder<List<dynamic>>(
@@ -79,54 +121,108 @@ class _MaintenanceDetailScreenState extends State<MaintenanceDetailScreen> {
                 } else if (userSnapshot.hasError) {
                   return Center(
                     child: Text(
-                        "Error loading assigned users: ${userSnapshot.error}"),
+                        "Error al cargar usuarios asignados: ${userSnapshot.error}"),
                   );
                 } else {
                   final assignedUsers = userSnapshot.data!;
-                  return Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: ListView(
-                      children: [
-                        Text(
-                          "Maintenance ID: ${maintenance['id']}",
-                          style: const TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 10),
-                        Text("Type: ${maintenance['maintenanceType']}"),
-                        Text("Area: ${maintenance['physicalAreaId']}"),
-                        Text("Priority: ${maintenance['priority']}"),
-                        Text("Start: ${maintenance['startDate']}"),
-                        Text("Duration: ${maintenance['duration']} hours"),
-                        const SizedBox(height: 20),
-                        Text(
-                          "Description:",
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        Text(maintenance['description']),
-                        const SizedBox(height: 20),
-                        const Text(
-                          "Assigned Users:",
-                          style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 10),
-                        assignedUsers.isEmpty
-                            ? const Text(
-                                "No users assigned to this maintenance.",
-                              )
-                            : Column(
-                                children: assignedUsers.map((user) {
-                                  return Card(
-                                    child: ListTile(
-                                      title: Text("User ID: ${user['userId']}"),
-                                      subtitle: Text(
-                                          "Completed: ${user['completed'] ? "Yes" : "No"}"),
+                  return SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Card para detalles del mantenimiento
+                          Card(
+                            elevation: 4,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    "Detalles del Mantenimiento",
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
                                     ),
-                                  );
-                                }).toList(),
+                                  ),
+                                  const Divider(),
+                                  _buildDetailRow(
+                                      "ID", maintenance['id'].toString()),
+                                  _buildDetailRow(
+                                      "Tipo", maintenance['maintenanceType']),
+                                  _buildDetailRow("Área Física",
+                                      maintenance['physicalAreaName']),
+                                  _buildDetailRow(
+                                      "Prioridad", maintenance['priority']),
+                                  _buildDetailRow("Inicio",
+                                      maintenance['startDate'].toString()),
+                                  _buildDetailRow("Duración",
+                                      "${maintenance['duration']} horas"),
+                                  const SizedBox(height: 10),
+                                  const Text(
+                                    "Descripción:",
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  Text(maintenance['description']),
+                                ],
                               ),
-                      ],
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+
+                          // Card para usuarios asignados
+                          Card(
+                            elevation: 4,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    "Usuarios Asignados",
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const Divider(),
+                                  assignedUsers.isEmpty
+                                      ? const Text(
+                                          "No hay usuarios asignados a este mantenimiento.",
+                                        )
+                                      : Column(
+                                          children: assignedUsers.map((user) {
+                                            return ListTile(
+                                              contentPadding: EdgeInsets.zero,
+                                              title: Text(
+                                                "ID: ${user['userId']}",
+                                                style: const TextStyle(
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                              ),
+                                              subtitle: Text(
+                                                  "Nombre: ${user['userName']}\nCompletado: ${user['completed'] ? "Sí" : "No"}"),
+                                              leading: const Icon(
+                                                Icons.person,
+                                                color: Colors.green,
+                                              ),
+                                            );
+                                          }).toList(),
+                                        ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   );
                 }

@@ -54,7 +54,6 @@ class _EditMaintenanceScreenState extends State<EditMaintenanceScreen> {
       );
 
       setState(() {
-        // Validar si el tipo de mantenimiento devuelto por el backend coincide con los disponibles
         final backendType = response['maintenanceType'];
         _selectedMaintenanceType =
             _maintenanceTypes.contains(backendType) ? backendType : null;
@@ -119,12 +118,12 @@ class _EditMaintenanceScreenState extends State<EditMaintenanceScreen> {
         );
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Maintenance updated successfully")),
+          const SnackBar(content: Text("Mantenimiento actualizado exitosamente")),
         );
         Navigator.pop(context, true);
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error updating maintenance: $e")),
+          SnackBar(content: Text("Error al actualizar el mantenimiento: $e")),
         );
       }
     }
@@ -159,170 +158,176 @@ class _EditMaintenanceScreenState extends State<EditMaintenanceScreen> {
     }
   }
 
+  Widget _buildFormField({
+    required String label,
+    TextEditingController? controller,
+    bool readOnly = false,
+    TextInputType keyboardType = TextInputType.text,
+    String? Function(String?)? validator,
+    VoidCallback? onTap,
+    int? maxLines,
+    Widget? suffixIcon,
+  }) {
+    return TextFormField(
+      controller: controller,
+      readOnly: readOnly,
+      keyboardType: keyboardType,
+      maxLines: maxLines,
+      validator: validator,
+      onTap: onTap,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        filled: true,
+        fillColor: Colors.grey[200],
+        suffixIcon: suffixIcon,
+      ),
+    );
+  }
+
+  Widget _buildDropdownField<T>({
+    required String label,
+    required T? value,
+    required List<DropdownMenuItem<T>> items,
+    required ValueChanged<T?> onChanged,
+    String? Function(T?)? validator,
+  }) {
+    return DropdownButtonFormField<T>(
+      value: value,
+      items: items,
+      onChanged: onChanged,
+      validator: validator,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        filled: true,
+        fillColor: Colors.grey[200],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Edit Maintenance"),
+        title: const Text("Editar Mantenimiento"),
+        backgroundColor: Colors.green,
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Form(
-                key: _formKey,
-                child: ListView(
-                  children: [
-                    TextFormField(
-                      initialValue: widget.maintenanceId.toString(),
-                      decoration: const InputDecoration(
-                        labelText: "Maintenance ID",
+          : SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildFormField(
+                        label: "ID del Mantenimiento",
+                        controller: TextEditingController(
+                            text: widget.maintenanceId.toString()),
+                        readOnly: true,
                       ),
-                      readOnly: true,
-                    ),
-                    const SizedBox(height: 16),
-                    DropdownButtonFormField<String>(
-                      value: _selectedMaintenanceType,
-                      items: _maintenanceTypes.map((type) {
-                        return DropdownMenuItem<String>(
-                          value: type,
-                          child: Text(type),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedMaintenanceType = value;
-                        });
-                      },
-                      decoration: const InputDecoration(
-                        labelText: "Maintenance Type",
+                      const SizedBox(height: 16),
+                      _buildDropdownField<String>(
+                        label: "Tipo de Mantenimiento",
+                        value: _selectedMaintenanceType,
+                        items: _maintenanceTypes
+                            .map((type) => DropdownMenuItem(
+                                  value: type,
+                                  child: Text(type),
+                                ))
+                            .toList(),
+                        onChanged: (value) =>
+                            setState(() => _selectedMaintenanceType = value),
+                        validator: (value) =>
+                            value == null ? "Seleccione un tipo" : null,
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return "Please select a maintenance type.";
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    DropdownButtonFormField<int>(
-                      value: _selectedPhysicalAreaId,
-                      items: _physicalAreas.map((area) {
-                        return DropdownMenuItem<int>(
-                          value: area['id'],
-                          child: Text(area['name']),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedPhysicalAreaId = value;
-                        });
-                      },
-                      decoration: const InputDecoration(
-                        labelText: "Physical Area",
+                      const SizedBox(height: 16),
+                      _buildDropdownField<int>(
+                        label: "Área Física",
+                        value: _selectedPhysicalAreaId,
+                        items: _physicalAreas
+                            .map((area) => DropdownMenuItem<int>(
+                                  value: area['id'] as int,
+                                  child: Text(area['name'] as String),
+                                ))
+                            .toList(),
+                        onChanged: (value) =>
+                            setState(() => _selectedPhysicalAreaId = value),
+                        validator: (value) =>
+                            value == null ? "Seleccione un área" : null,
                       ),
-                      validator: (value) {
-                        if (value == null) {
-                          return "Please select a physical area.";
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _descriptionController,
-                      decoration: const InputDecoration(
-                        labelText: "Description",
+                      const SizedBox(height: 16),
+                      _buildFormField(
+                        label: "Descripción",
+                        controller: _descriptionController,
+                        maxLines: 3,
+                        validator: (value) =>
+                            value!.isEmpty ? "Escriba una descripción" : null,
                       ),
-                      maxLines: 3,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return "Please provide a description.";
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _durationController,
-                      decoration: const InputDecoration(
-                        labelText: "Duration (hours)",
+                      const SizedBox(height: 16),
+                      _buildFormField(
+                        label: "Duración (horas)",
+                        controller: _durationController,
+                        keyboardType: TextInputType.number,
+                        validator: (value) =>
+                            value!.isEmpty ? "Ingrese la duración" : null,
                       ),
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return "Please provide a duration.";
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      readOnly: true,
-                      decoration: InputDecoration(
-                        labelText: "Start Date",
+                      const SizedBox(height: 16),
+                      _buildFormField(
+                        label: "Fecha de Inicio",
+                        controller: TextEditingController(
+                          text: _selectedStartDate?.toLocal().toString() ?? '',
+                        ),
+                        readOnly: true,
                         suffixIcon: IconButton(
                           icon: const Icon(Icons.calendar_today),
                           onPressed: _selectStartDate,
                         ),
+                        validator: (value) =>
+                            _selectedStartDate == null ? "Seleccione fecha" : null,
                       ),
-                      controller: TextEditingController(
-                        text: _selectedStartDate != null
-                            ? _selectedStartDate.toString()
-                            : '',
+                      const SizedBox(height: 16),
+                      _buildDropdownField<String>(
+                        label: "Prioridad",
+                        value: _priority,
+                        items: ['baja', 'media', 'alta']
+                            .map((priority) => DropdownMenuItem<String>(
+                                  value: priority,
+                                  child: Text(priority.toUpperCase()),
+                                ))
+                            .toList(),
+                        onChanged: (value) => setState(() => _priority = value!),
                       ),
-                      validator: (value) {
-                        if (_selectedStartDate == null) {
-                          return "Please select a start date.";
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    DropdownButtonFormField<String>(
-                      value: _priority,
-                      items: ['baja', 'media', 'alta'].map((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value.toUpperCase()),
-                        );
-                      }).toList(),
-                      onChanged: (newValue) {
-                        setState(() {
-                          _priority = newValue!;
-                        });
-                      },
-                      decoration: const InputDecoration(labelText: "Priority"),
-                    ),
-                    const SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: () async {
-                        final confirmed = await showDialog<bool>(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text("Confirm Changes"),
-                            content: const Text(
-                                "Are you sure you want to save these changes?"),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: const Text("Cancel"),
-                              ),
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, true),
-                                child: const Text("Confirm"),
-                              ),
-                            ],
+                      const SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: _updateMaintenance,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 12,
+                            horizontal: 24,
                           ),
-                        );
-
-                        if (confirmed == true) {
-                          await _updateMaintenance();
-                        }
-                      },
-                      child: const Text("Save Changes"),
-                    ),
-                  ],
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          "Guardar Cambios",
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

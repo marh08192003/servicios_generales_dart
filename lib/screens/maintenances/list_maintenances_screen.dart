@@ -11,7 +11,12 @@ class ListMaintenancesScreen extends StatefulWidget {
 
 class _ListMaintenancesScreenState extends State<ListMaintenancesScreen> {
   final ApiService _apiService = ApiService();
-  late Future<List<dynamic>> _maintenances;
+
+  List<dynamic> _maintenances = [];
+  int _currentPage = 0;
+  final int _pageSize = 4;
+  bool _isLoading = false;
+  bool _hasMore = true;
 
   @override
   void initState() {
@@ -19,34 +24,87 @@ class _ListMaintenancesScreenState extends State<ListMaintenancesScreen> {
     _fetchMaintenances();
   }
 
-  void _fetchMaintenances() {
+  Future<void> _fetchMaintenances({int page = 0}) async {
     setState(() {
-      _maintenances = _apiService
-          .get(listMaintenancesEndpoint)
-          .then((data) => data as List<dynamic>);
+      _isLoading = true;
     });
+
+    try {
+      final response = await _apiService
+          .get("$listMaintenancesEndpoint?page=$page&size=$_pageSize");
+      final fetchedMaintenances = response as List<dynamic>;
+
+      setState(() {
+        _maintenances = fetchedMaintenances;
+        _isLoading = false;
+        _hasMore = fetchedMaintenances.length == _pageSize;
+        _currentPage = page;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error al cargar mantenimientos: $e")),
+      );
+    }
   }
 
   Future<void> _deleteMaintenance(int id) async {
     try {
-      await _apiService
-          .delete(deleteMaintenanceEndpoint.replaceAll("{id}", id.toString()));
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Maintenance deleted successfully")),
+      await _apiService.delete(
+        deleteMaintenanceEndpoint.replaceAll("{id}", id.toString()),
       );
-      _fetchMaintenances(); // Refresca el listado tras eliminar
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Mantenimiento eliminado exitosamente.")),
+      );
+      _fetchMaintenances(page: _currentPage);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error deleting maintenance: $e")),
+        SnackBar(content: Text("Error al eliminar el mantenimiento: $e")),
       );
     }
+  }
+
+  Widget _buildPaginationControls() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          ElevatedButton(
+            onPressed: _currentPage > 0 && !_isLoading
+                ? () {
+                    _fetchMaintenances(page: _currentPage - 1);
+                  }
+                : null,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+            ),
+            child: const Text("Anterior"),
+          ),
+          ElevatedButton(
+            onPressed: _hasMore && !_isLoading
+                ? () {
+                    _fetchMaintenances(page: _currentPage + 1);
+                  }
+                : null,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+            ),
+            child: const Text("Siguiente"),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Maintenances"),
+        title: const Text("Mantenimientos"),
+        backgroundColor: Colors.green,
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -60,99 +118,125 @@ class _ListMaintenancesScreenState extends State<ListMaintenancesScreen> {
           ),
         ],
       ),
-      body: FutureBuilder<List<dynamic>>(
-        future: _maintenances,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(
-              child: Text("Error loading maintenances: ${snapshot.error}"),
-            );
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(
-              child: Text("No maintenances found."),
-            );
-          } else {
-            final maintenances = snapshot.data!;
-            return ListView.builder(
-              itemCount: maintenances.length,
-              itemBuilder: (context, index) {
-                final maintenance = maintenances[index];
-                return Card(
-                  margin:
-                      const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                  child: ListTile(
-                    title: Text(
-                      "Maintenance ID: ${maintenance['id']}",
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text("Type: ${maintenance['maintenanceType']}"),
-                        Text("Area: ${maintenance['physicalAreaId']}"),
-                        Text("Priority: ${maintenance['priority']}"),
-                        Text("Start: ${maintenance['startDate']}"),
-                        Text("Duration: ${maintenance['duration']} hours"),
-                      ],
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit, color: Colors.blue),
-                          onPressed: () {
-                            Navigator.pushNamed(
-                              context,
-                              AppRoutes.editMaintenance,
-                              arguments: maintenance['id'],
-                            ).then((_) => _fetchMaintenances());
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () async {
-                            final confirmed = await showDialog<bool>(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: const Text("Confirm Deletion"),
-                                content: const Text(
-                                    "Are you sure you want to delete this maintenance?"),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.pop(context, false),
-                                    child: const Text("Cancel"),
+      body: Column(
+        children: [
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : ListView.builder(
+                    itemCount: _maintenances.length,
+                    itemBuilder: (context, index) {
+                      final maintenance = _maintenances[index];
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.pushNamed(
+                            context,
+                            AppRoutes.maintenanceDetails,
+                            arguments: maintenance['id'],
+                          );
+                        },
+                        child: Card(
+                          elevation: 4,
+                          margin: const EdgeInsets.symmetric(
+                              vertical: 8, horizontal: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "ID: ${maintenance['id']} || Tipo: ${maintenance['maintenanceType']}",
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                          "Área: ${maintenance['physicalAreaId']}"),
+                                      Text(
+                                          "Prioridad: ${maintenance['priority']}"),
+                                      Text(
+                                          "Inicio: ${maintenance['startDate']}"),
+                                      Text(
+                                          "Duración estimada: ${maintenance['duration']} horas"),
+                                    ],
                                   ),
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.pop(context, true),
-                                    child: const Text("Delete"),
-                                  ),
-                                ],
-                              ),
-                            );
-                            if (confirmed == true) {
-                              await _deleteMaintenance(maintenance['id']);
-                            }
-                          },
+                                ),
+                                Row(
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.edit,
+                                        color: Colors.blue,
+                                      ),
+                                      onPressed: () async {
+                                        final result =
+                                            await Navigator.pushNamed(
+                                          context,
+                                          AppRoutes.editMaintenance,
+                                          arguments: maintenance['id'],
+                                        );
+                                        if (result == true) {
+                                          _fetchMaintenances(
+                                              page: _currentPage);
+                                        }
+                                      },
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.delete,
+                                        color: Colors.red,
+                                      ),
+                                      onPressed: () async {
+                                        final confirmed =
+                                            await showDialog<bool>(
+                                          context: context,
+                                          builder: (context) => AlertDialog(
+                                            title: const Text(
+                                                "Confirmar eliminación"),
+                                            content: const Text(
+                                                "¿Está seguro de eliminar este mantenimiento?"),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () => Navigator.pop(
+                                                    context, false),
+                                                child: const Text("Cancelar"),
+                                              ),
+                                              TextButton(
+                                                onPressed: () => Navigator.pop(
+                                                    context, true),
+                                                child: const Text("Eliminar"),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                        if (confirmed == true) {
+                                          await _deleteMaintenance(
+                                              maintenance['id']);
+                                        }
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                      ],
-                    ),
-                    onTap: () {
-                      Navigator.pushNamed(
-                        context,
-                        AppRoutes.maintenanceDetails,
-                        arguments: maintenance['id'],
                       );
                     },
                   ),
-                );
-              },
-            );
-          }
-        },
+          ),
+          _buildPaginationControls(),
+        ],
       ),
     );
   }

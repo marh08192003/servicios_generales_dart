@@ -19,13 +19,14 @@ class _CreateMaintenanceScreenState extends State<CreateMaintenanceScreen> {
   DateTime? _selectedStartDate;
 
   List<dynamic> _physicalAreas = [];
-
   final List<String> _maintenanceTypes = [
     'Inspecciones',
     'Reparaciones',
     'Reemplazos de piezas',
     'Mantenimiento preventivo',
   ];
+
+  bool isLoading = false;
 
   @override
   void initState() {
@@ -34,14 +35,21 @@ class _CreateMaintenanceScreenState extends State<CreateMaintenanceScreen> {
   }
 
   Future<void> _fetchPhysicalAreas() async {
+    setState(() {
+      isLoading = true;
+    });
     try {
       final areas = await _apiService.get(listPhysicalAreasEndpoint);
       setState(() {
         _physicalAreas = areas;
+        isLoading = false;
       });
     } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error loading physical areas: $e")),
+        SnackBar(content: Text("Error al cargar áreas físicas: $e")),
       );
     }
   }
@@ -57,12 +65,12 @@ class _CreateMaintenanceScreenState extends State<CreateMaintenanceScreen> {
           'description': _descriptionController.text,
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Maintenance created successfully!")),
+          const SnackBar(content: Text("Mantenimiento creado exitosamente!")),
         );
         Navigator.pop(context, true);
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error creating maintenance: $e")),
+          SnackBar(content: Text("Error al crear mantenimiento: $e")),
         );
       }
     }
@@ -97,133 +105,166 @@ class _CreateMaintenanceScreenState extends State<CreateMaintenanceScreen> {
     }
   }
 
+  Widget _buildDropdownField<T>({
+    required String label,
+    required T? value,
+    required List<DropdownMenuItem<T>> items,
+    required ValueChanged<T?> onChanged,
+    String? Function(T?)? validator,
+  }) {
+    return DropdownButtonFormField<T>(
+      value: value,
+      items: items,
+      onChanged: onChanged,
+      validator: validator,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        filled: true,
+        fillColor: Colors.grey[200],
+      ),
+    );
+  }
+
+  Widget _buildFormField({
+    required String label,
+    TextEditingController? controller,
+    bool readOnly = false,
+    TextInputType keyboardType = TextInputType.text,
+    String? Function(String?)? validator,
+    VoidCallback? onTap,
+    int? maxLines,
+    Widget? suffixIcon,
+  }) {
+    return TextFormField(
+      controller: controller,
+      readOnly: readOnly,
+      keyboardType: keyboardType,
+      maxLines: maxLines,
+      validator: validator,
+      onTap: onTap,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        filled: true,
+        fillColor: Colors.grey[200],
+        suffixIcon: suffixIcon,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Create Maintenance"),
+        title: const Text("Crear Mantenimiento"),
+        backgroundColor: Colors.green,
       ),
-      body: _physicalAreas.isEmpty
+      body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Padding(
+          : SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
               child: Form(
                 key: _formKey,
-                child: ListView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    DropdownButtonFormField<String>(
+                    _buildDropdownField<String>(
+                      label: "Tipo de Mantenimiento",
                       value: _selectedMaintenanceType,
-                      items: _maintenanceTypes.map((type) {
-                        return DropdownMenuItem<String>(
-                          value: type,
-                          child: Text(type),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedMaintenanceType = value;
-                        });
-                      },
-                      decoration: const InputDecoration(
-                        labelText: "Maintenance Type",
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return "Please select a maintenance type.";
-                        }
-                        return null;
-                      },
+                      items: _maintenanceTypes
+                          .map((type) => DropdownMenuItem(
+                                value: type,
+                                child: Text(type),
+                              ))
+                          .toList(),
+                      onChanged: (value) =>
+                          setState(() => _selectedMaintenanceType = value),
+                      validator: (value) =>
+                          value == null ? "Seleccione un tipo" : null,
                     ),
                     const SizedBox(height: 16),
-                    DropdownButtonFormField<int>(
+                    _buildDropdownField<int>(
+                      label: "Área Física",
                       value: _selectedPhysicalAreaId,
-                      items: _physicalAreas.map((area) {
-                        return DropdownMenuItem<int>(
-                          value: area['id'],
-                          child: Text(area['name']),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedPhysicalAreaId = value;
-                        });
-                      },
-                      decoration: const InputDecoration(
-                        labelText: "Physical Area",
-                      ),
-                      validator: (value) {
-                        if (value == null) {
-                          return "Please select a physical area.";
-                        }
-                        return null;
-                      },
+                      items: _physicalAreas
+                          .map((area) => DropdownMenuItem<int>(
+                                value: area['id'] as int,
+                                child: Text(area['name'] as String),
+                              ))
+                          .toList(),
+                      onChanged: (value) =>
+                          setState(() => _selectedPhysicalAreaId = value),
+                      validator: (value) =>
+                          value == null ? "Seleccione un área" : null,
                     ),
                     const SizedBox(height: 16),
-                    TextFormField(
+                    _buildFormField(
+                      label: "Descripción",
                       controller: _descriptionController,
-                      decoration: const InputDecoration(
-                        labelText: "Description",
-                      ),
                       maxLines: 3,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return "Please provide a description.";
-                        }
-                        return null;
-                      },
+                      validator: (value) =>
+                          value!.isEmpty ? "Escriba una descripción" : null,
                     ),
                     const SizedBox(height: 16),
-                    DropdownButtonFormField<int>(
-                      value: int.tryParse(
-                          _durationController.text), // Valor seleccionado
-                      items:
-                          List.generate(24, (index) => index + 1).map((value) {
-                        return DropdownMenuItem<int>(
-                          value: value,
-                          child: Text(value.toString()), // Muestra cada número
-                        );
-                      }).toList(),
+                    _buildDropdownField<int>(
+                      label: "Duración (horas)",
+                      value: int.tryParse(_durationController.text),
+                      items: List.generate(24, (index) => index + 1)
+                          .map((value) => DropdownMenuItem<int>(
+                                value: value,
+                                child: Text(value.toString()),
+                              ))
+                          .toList(),
                       onChanged: (value) {
-                        setState(() {
-                          _durationController.text = value.toString();
-                        });
-                      },
-                      decoration: const InputDecoration(
-                        labelText: "Duration (hours)",
-                      ),
-                      validator: (value) {
-                        if (value == null) {
-                          return "Please select a duration.";
+                        if (value != null) {
+                          setState(() {
+                            _durationController.text = value.toString();
+                          });
                         }
-                        return null;
                       },
+                      validator: (value) =>
+                          value == null ? "Seleccione una duración" : null,
                     ),
                     const SizedBox(height: 16),
-                    TextFormField(
-                      readOnly: true,
-                      decoration: InputDecoration(
-                        labelText: "Start Date",
-                        suffixIcon: IconButton(
-                          icon: const Icon(Icons.calendar_today),
-                          onPressed: _selectStartDate,
-                        ),
-                      ),
+                    _buildFormField(
+                      label: "Fecha de Inicio",
                       controller: TextEditingController(
-                        text: _selectedStartDate != null
-                            ? _selectedStartDate.toString()
-                            : '',
+                        text: _selectedStartDate?.toLocal().toString() ?? '',
                       ),
-                      validator: (value) {
-                        if (_selectedStartDate == null) {
-                          return "Please select a start date.";
-                        }
-                        return null;
-                      },
+                      readOnly: true,
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.calendar_today),
+                        onPressed: _selectStartDate,
+                      ),
+                      validator: (value) => _selectedStartDate == null
+                          ? "Seleccione una fecha"
+                          : null,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: _createMaintenance,
-                      child: const Text("Create Maintenance"),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 12,
+                          horizontal: 24,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text(
+                        "Crear Mantenimiento",
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
                   ],
                 ),
