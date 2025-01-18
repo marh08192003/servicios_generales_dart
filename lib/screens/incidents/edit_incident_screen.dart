@@ -66,7 +66,7 @@ class _EditIncidentScreenState extends State<EditIncidentScreen> {
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error loading incident data: $e")),
+        SnackBar(content: Text("Error al cargar los datos de la incidencia: $e")),
       );
     } finally {
       setState(() {
@@ -83,7 +83,7 @@ class _EditIncidentScreenState extends State<EditIncidentScreen> {
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error loading physical areas: $e")),
+        SnackBar(content: Text("Error al cargar las áreas físicas: $e")),
       );
     }
   }
@@ -105,109 +105,188 @@ class _EditIncidentScreenState extends State<EditIncidentScreen> {
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Incident updated successfully")),
+        const SnackBar(content: Text("Incidencia actualizada exitosamente.")),
       );
       Navigator.pop(context, true);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error updating incident: $e")),
+        SnackBar(content: Text("Error al actualizar la incidencia: $e")),
       );
     }
+  }
+
+  Widget _buildFormField({
+    required String label,
+    required TextEditingController controller,
+    int maxLines = 1,
+    bool readOnly = false,
+  }) {
+    return TextFormField(
+      controller: controller,
+      maxLines: maxLines,
+      readOnly: readOnly,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        filled: true,
+        fillColor: Colors.grey[200],
+      ),
+    );
+  }
+
+  Widget _buildDropdownField({
+    required String label,
+    required String? value,
+    required List<DropdownMenuItem<String>> items,
+    required ValueChanged<String?> onChanged,
+  }) {
+    return DropdownButtonFormField<String>(
+      value: value,
+      items: items,
+      onChanged: onChanged,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        filled: true,
+        fillColor: Colors.grey[200],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Edit Incident"),
+        title: const Text("Editar Incidencia"),
+        backgroundColor: Colors.green,
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ListView(
-                children: [
-                  TextField(
-                    controller: userIdController,
-                    decoration: const InputDecoration(labelText: "User ID"),
-                    readOnly: true,
-                  ),
-                  DropdownButtonFormField<String>(
-                    value: selectedPhysicalAreaId,
-                    items: physicalAreas.map((area) {
-                      return DropdownMenuItem<String>(
-                        value: area['id'].toString(),
-                        child: Text(area['name']),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        selectedPhysicalAreaId = value;
-                      });
-                    },
-                    decoration:
-                        const InputDecoration(labelText: "Physical Area"),
-                  ),
-                  TextField(
-                    controller: descriptionController,
-                    decoration: const InputDecoration(labelText: "Description"),
-                  ),
-                  TextField(
-                    controller: reportDateController,
-                    decoration: const InputDecoration(labelText: "Report Date"),
-                    readOnly: true,
-                  ),
-                  if (canEditStatus)
-                    DropdownButtonFormField<String>(
-                      value: selectedStatus,
-                      items: statusOptions.map((status) {
-                        return DropdownMenuItem<String>(
-                          value: status,
-                          child: Text(status),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          selectedStatus = value;
-                        });
-                      },
-                      decoration: const InputDecoration(labelText: "Status"),
-                    )
-                  else
-                    TextField(
-                      controller: TextEditingController(text: selectedStatus),
-                      decoration: const InputDecoration(labelText: "Status"),
+          : SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Detalles de la incidencia:",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildFormField(
+                      label: "ID del Usuario",
+                      controller: userIdController,
                       readOnly: true,
                     ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () async {
-                      final confirmed = await showDialog<bool>(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text("Confirm Changes"),
-                          content: const Text(
-                              "Are you sure you want to save these changes?"),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, false),
-                              child: const Text("Cancel"),
+                    const SizedBox(height: 16),
+                    _buildDropdownField(
+                      label: "Área Física",
+                      value: selectedPhysicalAreaId,
+                      items: physicalAreas
+                          .map((area) => DropdownMenuItem<String>(
+                                value: area['id'].toString(),
+                                child: Text(area['name']),
+                              ))
+                          .toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          selectedPhysicalAreaId = value;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    _buildFormField(
+                      label: "Descripción",
+                      controller: descriptionController,
+                      maxLines: 3,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildFormField(
+                      label: "Fecha de Reporte",
+                      controller: reportDateController,
+                      readOnly: true,
+                    ),
+                    const SizedBox(height: 16),
+                    if (canEditStatus)
+                      _buildDropdownField(
+                        label: "Estado",
+                        value: selectedStatus,
+                        items: statusOptions
+                            .map((status) => DropdownMenuItem<String>(
+                                  value: status,
+                                  child: Text(status.toUpperCase()),
+                                ))
+                            .toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            selectedStatus = value;
+                          });
+                        },
+                      )
+                    else
+                      _buildFormField(
+                        label: "Estado",
+                        controller:
+                            TextEditingController(text: selectedStatus),
+                        readOnly: true,
+                      ),
+                    const SizedBox(height: 20),
+                    Center(
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          final confirmed = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text("Confirmar Cambios"),
+                              content: const Text(
+                                  "¿Está seguro de que desea guardar estos cambios?"),
+                              actions: [
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.pop(context, false),
+                                  child: const Text("Cancelar"),
+                                ),
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.pop(context, true),
+                                  child: const Text("Confirmar"),
+                                ),
+                              ],
                             ),
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, true),
-                              child: const Text("Confirm"),
-                            ),
-                          ],
-                        ),
-                      );
+                          );
 
-                      if (confirmed == true) {
-                        await _updateIncident();
-                      }
-                    },
-                    child: const Text("Save Changes"),
-                  ),
-                ],
+                          if (confirmed == true) {
+                            await _updateIncident();
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 12,
+                            horizontal: 24,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          "Guardar Cambios",
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
     );

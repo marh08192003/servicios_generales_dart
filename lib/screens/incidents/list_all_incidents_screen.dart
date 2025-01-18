@@ -10,7 +10,11 @@ class ListAllIncidentsScreen extends StatefulWidget {
 
 class _ListAllIncidentsScreenState extends State<ListAllIncidentsScreen> {
   final ApiService _apiService = ApiService();
-  late Future<List<dynamic>> _incidents;
+  List<dynamic> _incidents = [];
+  int _currentPage = 0;
+  final int _pageSize = 4;
+  bool _isLoading = false;
+  bool _hasMore = true;
 
   @override
   void initState() {
@@ -18,142 +22,114 @@ class _ListAllIncidentsScreenState extends State<ListAllIncidentsScreen> {
     _fetchIncidents();
   }
 
-  void _fetchIncidents() {
-    setState(() {
-      _incidents = _apiService
-          .get(listAllIncidentsEndpoint)
-          .then((data) => data as List<dynamic>)
-          .catchError((error) {
-        if (error.toString().contains('403')) {
-          throw Exception("Access denied: insufficient permissions");
-        }
-        throw error;
-      });
-    });
-  }
+  Future<void> _fetchIncidents({int page = 0}) async {
+    if (_isLoading) return;
 
-  Future<void> _deleteIncident(int incidentId) async {
+    setState(() {
+      _isLoading = true;
+    });
+
     try {
-      await _apiService.delete(
-        deleteIncidentEndpoint.replaceAll("{id}", incidentId.toString()),
-      );
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Incident deleted successfully!")),
-      );
-      _fetchIncidents();
+      final response = await _apiService.get(
+          "$listAllIncidentsEndpoint?page=$page&size=$_pageSize");
+      final fetchedIncidents = response as List<dynamic>;
+
+      setState(() {
+        _incidents = fetchedIncidents; // Sobrescribe la lista actual
+        _hasMore = fetchedIncidents.length == _pageSize; // Comprueba si hay más
+        _currentPage = page; // Actualiza la página actual
+      });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error deleting incident: $e")),
+        SnackBar(content: Text("Error al cargar incidencias: $e")),
       );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
+  }
+
+  Widget _buildPaginationControls() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          ElevatedButton(
+            onPressed: _currentPage > 0 && !_isLoading
+                ? () => _fetchIncidents(page: _currentPage - 1)
+                : null,
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+            child: const Text("Anterior"),
+          ),
+          ElevatedButton(
+            onPressed: _hasMore && !_isLoading
+                ? () => _fetchIncidents(page: _currentPage + 1)
+                : null,
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+            child: const Text("Siguiente"),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("All Incidents"),
+        title: const Text("Todas las Incidencias"),
+        backgroundColor: Colors.green,
       ),
-      body: FutureBuilder<List<dynamic>>(
-        future: _incidents,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(
-              child: Text(
-                "Error loading incidents: ${snapshot.error}",
-                style: const TextStyle(color: Colors.red),
-              ),
-            );
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(
-              child: Text("No incidents found."),
-            );
-          } else {
-            final incidents = snapshot.data!;
-            return ListView.builder(
-              itemCount: incidents.length,
-              itemBuilder: (context, index) {
-                final incident = incidents[index];
-                return Card(
-                  margin:
-                      const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                  child: ListTile(
-                    title: Text(
-                      "Incident ID: ${incident['id']}",
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text("Reported by User ID: ${incident['userId']}"),
-                        Text("Physical Area ID: ${incident['physicalAreaId']}"),
-                        Text("Description: ${incident['description']}"),
-                        Text("Status: ${incident['status']}"),
-                        Text(
-                            "Reported on: ${incident['reportDate'] ?? 'Unknown'}"),
-                      ],
-                    ),
-                    onTap: () {
-                      Navigator.pushNamed(
-                        context,
-                        AppRoutes.incidentDetails,
-                        arguments: incident[
-                            'id'], // Pasa el ID del incidente como argumento
-                      );
-                    },
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit),
-                          onPressed: () {
+      body: Column(
+        children: [
+          Expanded(
+            child: _isLoading && _currentPage == 0
+                ? const Center(child: CircularProgressIndicator())
+                : ListView.builder(
+                    itemCount: _incidents.length,
+                    itemBuilder: (context, index) {
+                      final incident = _incidents[index];
+                      return Card(
+                        elevation: 4,
+                        margin: const EdgeInsets.symmetric(
+                            vertical: 8, horizontal: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: ListTile(
+                          title: Text(
+                            "Incidencia #${incident['id']}",
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text("Usuario: ${incident['userId']}"),
+                              Text(
+                                  "Área Física: ${incident['physicalAreaId']}"),
+                              Text("Descripción: ${incident['description']}"),
+                              Text("Estado: ${incident['status']}"),
+                              Text(
+                                  "Fecha: ${incident['reportDate'] ?? 'Desconocida'}"),
+                            ],
+                          ),
+                          onTap: () {
                             Navigator.pushNamed(
                               context,
-                              AppRoutes.editIncident,
-                              arguments:
-                                  incident['id'], // Pasa el ID del incidente
+                              AppRoutes.incidentDetails,
+                              arguments: incident['id'],
                             );
                           },
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () async {
-                            final confirmed = await showDialog<bool>(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: const Text("Confirm Deletion"),
-                                content: const Text(
-                                    "Are you sure you want to delete this incident?"),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.pop(context, false),
-                                    child: const Text("Cancel"),
-                                  ),
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.pop(context, true),
-                                    child: const Text("Delete"),
-                                  ),
-                                ],
-                              ),
-                            );
-
-                            if (confirmed == true) {
-                              await _deleteIncident(incident['id']);
-                            }
-                          },
-                        ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
-                );
-              },
-            );
-          }
-        },
+          ),
+          _buildPaginationControls(),
+        ],
       ),
     );
   }
